@@ -8,7 +8,7 @@ aka CS145 MP1
 
 #### Important dates: ####
 * 22 March 2014 (Sat) - Deadline of submission (online)
-* 28 March 2014 (Sat) - Presentation
+* 28 March 2014 (Fri) - Presentation
 
 #### Deliverables ####
 * source code
