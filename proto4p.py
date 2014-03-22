@@ -103,7 +103,7 @@ def handle_ballCollisions(ball_rect, rects, isPaddle=True):
 				ball.bounce('vertical')
 		# print "rect_i = " + str(rect_i)
 
-
+#handle paddle-border limitations
 def handle_borderPaddleCollisions(border_rects, paddle_rects):
 	for p in paddle_rects:
 		# print paddle_rects.index(p)
@@ -115,8 +115,37 @@ def handle_borderPaddleCollisions(border_rects, paddle_rects):
 		if paddle_i != -1:
 			players[paddle_i].set_direction(e.NONE)
 
+def manage_scoring(ball):
+
+	# index of the player whose side had the ball come out:  0 - top; 1 - bottom; 2 - left; 3 - right
+	player_side = -1 
+
+	TOP = 0
+	BOTTOM = 1
+	LEFT = 2
+	RIGHT = 3
+
+	if ball.x < -10:
+		player_side = LEFT
+	elif ball.x > WINDOWWIDTH+10:
+		player_side = RIGHT
+	elif ball.y < -10:
+		player_side = TOP
+	elif ball.y > WINDOWHEIGHT+10:
+		player_side = BOTTOM
+	if player_side != -1:
+		player_scored_i = [p.color for p in players].index(ball.color)
+		if player_scored_i != player_side: # to ensure that you won't score from your own loss
+			players[ player_scored_i ].add_score()
+		ball = e.Ball( e.AQUA, [250, 250])
+		print ball.get_pos()
+		ball.set_direction(e.NE)
 
 
+	for p in players:
+		print str(players.index(p)) + " " + str(p.score)
+
+	return ball
 #ball speed
 BSPEED = 2
 
@@ -203,14 +232,16 @@ while True:
 	for p in players:
 		p.update_pos(PSPEED)
 
-	# restarts the ball if it ever gets out of the windor
-	if ball.x < -10 or ball.x > WINDOWWIDTH+10 or ball.y < -10 or ball.y > WINDOWHEIGHT+10:
-		ball = e.Ball( e.AQUA, [250, 250])
-		ball.set_direction(e.NE)
+	# player scores if ball comes out of the window
+	print "BALL COLOR " + str(ball.color)
+	try:
+		ball = manage_scoring(ball)
+	except:
+		pass
+	print "BALL COLOR " + str(ball.color) + str(ball.get_pos())
 	
 	# window not drawn onto the actual screen unless this is called
 	pygame.display.update()
-
 
 	# parang time.sleep pero frames per second
 	clock.tick(FPS)

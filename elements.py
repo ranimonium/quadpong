@@ -86,6 +86,9 @@ class Sprite:
 	def set_pos(self, pos):
 		self.x, self.y = pos[0], pos[1]
 
+	def get_pos(self):
+		return (self.x, self.y)
+		
 	def set_direction(self, direction):
 		self.direction = direction
 
