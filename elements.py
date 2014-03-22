@@ -85,10 +85,10 @@ class Sprite:
 class Ball(Sprite):
 	
 	def bounce(self, to):
-		print "BOUNCE!"
-		print self.direction
+		# print "BOUNCE!"
+		# print self.direction
 		self.set_direction(get_bounceDirection(self.direction, to))
-		print self.direction
+		# print self.direction
 		
 class Player(Sprite):
 	
