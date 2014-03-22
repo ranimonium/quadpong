@@ -22,8 +22,8 @@ clock = pygame.time.Clock()
 FPS = 200 #Frames Per Second
 
 # set up arena's "dimensions"
-arenaTOP = WINDOWHEIGHT/12
-arenaLEFT = WINDOWWIDTH/12
+arenaTOP = WINDOWHEIGHT/10
+arenaLEFT = WINDOWWIDTH/10
 arenaWIDTH = WINDOWWIDTH - arenaLEFT*2
 arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
@@ -45,7 +45,7 @@ paddleHEIGHT : vertical
 NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
-pcolors = [e.CBLUE, e.RED, e.GREEN, e.BLUE]
+pcolors = [e.MEDIUMSPRINGGREEN, e.HOTPINK, e.GOLD, e.DODGERBLUE]
 pcoords = [
 		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP], #player 0 top
 		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT)], #player 1 bottom
@@ -118,7 +118,7 @@ def handle_borderPaddleCollisions(border_rects, paddle_rects):
 
 
 #ball speed
-BSPEED = 1
+BSPEED = 2
 
 #paddle speed
 PSPEED = 2
@@ -127,19 +127,20 @@ PSPEED = 2
 while True:
 	
 	# paint background
-	windowSurface.fill(e.BLACK)
+	windowSurface.fill(e.DIMMESTGRAY)
 	
 	# draw stage borders
-	pygame.draw.rect(windowSurface, (255, 255, 255), [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
+	pygame.draw.rect(windowSurface, e.DIMGRAY, [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
 	border_rects = []
 	# print borders.keys()
 	# print borders
 	for b in borders.values():
-		border_rects.append( pygame.draw.line(windowSurface, (100, 100, 100), b[0], b[1], paddleWIDTH/2) )
+		border_rects.append( pygame.draw.line(windowSurface, e.DIMMERGRAY, b[0], b[1], paddleWIDTH/2) )
 		# pygame.draw.line(windowSurface, (100, 100, 100), b[0], b[1], paddleWIDTH/2)
 	
 	# draw the ball
-	ball_rect = pygame.draw.rect(windowSurface, ball.color, [ball.x, ball.y, ballWIDTH, ballHEIGHT])
+	ball_rect = pygame.draw.circle(windowSurface, ball.color, (ball.x, ball.y), ballWIDTH/2)
+	# ball_rect = pygame.draw.rect(windowSurface, ball.color, [ball.x, ball.y, ballWIDTH, ballHEIGHT])
 
 	# draw the paddles
 	paddle_rects = []
@@ -209,5 +210,7 @@ while True:
 	
 	# window not drawn onto the actual screen unless this is called
 	pygame.display.update()
+
+
 	# parang time.sleep pero frames per second
 	clock.tick(FPS)

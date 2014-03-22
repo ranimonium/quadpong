@@ -4,12 +4,22 @@
 # 	game Multiplayer Pong.  
 
 #set up colors
-AQUA = (0, 255, 255)
+GOLD = (255, 215, 0)
 RED = (255, 0, 0)
+LIGHTCORAL = (240, 128, 128)
+HOTPINK = (255, 105, 180)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-CBLUE = (100, 149, 237)
+SEAGREEN = (46, 139, 87)
+MEDIUMSPRINGGREEN = (0, 250, 154)
+AQUA = (0, 255, 255)
+MEDIUMBLUE = (0, 0, 205)
+CORNFLOWERBLUE = (100, 149, 237)
+DODGERBLUE = (30, 144, 255)
+DIMGRAY = (105, 105, 105)
+DIMMERGRAY = (80, 80, 80)
+DIMMESTGRAY = (25, 25, 25)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 #set up directions = (dx, dy)
 NONE = (0, 0)
