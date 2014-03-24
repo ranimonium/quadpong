@@ -1,22 +1,46 @@
 """
-GAME CLIENT
-
-Hi, suggestion lang ang nandito.
-Be free to implement your own ideas.
+	CLIENT for PingPong game implemented on pygame
+	+ means by which a player connects to the server and other players
+	+ gives instructions to the client's copy of the game
+	+ sends actions to the server; server responds with new game state
 
 """
 
-modifiable_field = 'i-modify mo ako'
+import socket
+import connection
 
+DEFAULT_SERVER_IP="127.0.0.1"
+DEFAULT_SERVER_PORT=1234
+CONNECTION_REQUEST_MESSAGE="join game"
+BUFFER_SIZE=1024
 
-#all clients, including self.  self knows self using client_id
-clients = []
+myServerPort=DEFAULT_SERVER_PORT
+myConnection=None
 
-client_id = 0 # to be assigned once connected; would be the own index in clients list
+"""
+	Uses a UDP connection to send initial request
+	Waits on UDP connection for server acknowledgement in the form of a TCP port
+	Connects to specific (TCP) port
+	myConnection is the connection on the TCP port
 
-def movement():t
-	#modify modifiable field
-	pass
+"""
+def connectToServer():
+	udpsocket=socket.socket(socket.AF_INET. socket.SOCK_DGRAM)
+	udpsocket.sendto(CONNECTION_REQUEST_MESSAGE, (DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT))
+	data, addr = udpsocket.recvfrom(BUFFER_SIZE)
+	myServerPort = int(data)
+	
+	s = socket.socket()
+	s.connect((DEFAULT_SERVER_IP, myServerPort))
+	myConnection = connection.connection(s)
+	print myConnection.getMessage #or add this to the GUI later on
+	
+def playerAction():
+	#game sends player's move here
+	
+def sendAction():
+	#client sends player's move to server
 
-def get_modifiable_field():
-	return modifiable_field
+def updateGameScreen():
+	#client receives new game state from server
+	#relays information to game which will update the GUI
