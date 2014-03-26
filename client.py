@@ -25,16 +25,18 @@ myConnection=None
 
 """
 def connectToServer():
-	udpsocket=socket.socket(socket.AF_INET. socket.SOCK_DGRAM)
+	udpsocket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	udpsocket.sendto(CONNECTION_REQUEST_MESSAGE, (DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT))
 	data, addr = udpsocket.recvfrom(BUFFER_SIZE)
 	myServerPort = int(data)
+	print "Will connect to ", data
 	
 	s = socket.socket()
 	s.connect((DEFAULT_SERVER_IP, myServerPort))
 	myConnection = connection.connection(s)
-	print myConnection.getMessage #or add this to the GUI later on
+	print myConnection.getMessage() #or add this to the GUI later on
 	
+"""
 def playerAction():
 	#game sends player's move here
 	
@@ -44,3 +46,7 @@ def sendAction():
 def updateGameScreen():
 	#client receives new game state from server
 	#relays information to game which will update the GUI
+"""
+	
+
+connectToServer()

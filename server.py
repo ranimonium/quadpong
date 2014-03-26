@@ -12,7 +12,7 @@ BUFFER_SIZE=1024
 import socket
 import connection
 
-DEFAULT_CONNECTION_PORT=1234
+TCP_IP = '0.0.0.0'
 
 clients=[]
 
@@ -31,48 +31,65 @@ clients=[]
 	
 """
 def getClients():
-	sockets=[]
+	sockets=[0 for i in xrange(0,NUMBER_OF_PLAYERS)]
 	
 	#initiate UDP socket where connection requests from clients come in
-	udpsocket = socket.socket(socket.AF_NET, socket.SOCK_DGRAM)
+	udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	#udpsocket=socket.socket()
 	udpsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	udpsocket.bind(('', DEFAULT_CONNECTION_PORT))
+	udpsocket.bind(('', DEFAULT_PORT))
 	
+	"""
+	portnum=2001
 	#initiate client-specific sockets/connections
 	for s in xrange(0,4):
-		sockets[s]=socket.socket()
+		sockets[s]=(socket.socket())
 		sockets[s].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		sockets[s].bind(('', portnum))
-		portnum++
+		sockets[s].bind((TCP_IP, portnum))
+		portnum+=1
+	"""
 	
 	#wait for connecion requests, send specific port number to each UDP-accepted request
 	#turn into threads eventually
 	s=0
-	portnum=1001
+	portnum=2001
 	while len(clients)<NUMBER_OF_PLAYERS:
-		udpsocket.listen(5)
+		#udpsocket.listen(5)
 		data, addr = udpsocket.recvfrom(BUFFER_SIZE)
 		if data=="join game":
-			udpsocket.sendto(str(portnum+s), addr)
+			print addr[0], "wants to join game"
+			udpsocket.sendto(str(portnum), addr)
 		
-			sockets[s].listen()
+			sockets[s]=(socket.socket())
+			sockets[s].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			sockets[s].bind((TCP_IP, portnum))
+			
+			sockets[s].listen(1)
 			remote_socket, addr = sockets[s].accept()
-			clients[s]=connection.connection(remote_socket)
+			clients.append(connection.connection(remote_socket))
 			clients[s].sendMessage("You have successfully joined the game")
-			s++
+			
+			print portnum
+			s+=1
+			portnum+=1
 
 
 #initialize game
 
+getClients()
 
 
-
+"""
 #wait for actions an output each one
 while True:
 	for c in clients:
 		message = c.getMessage()
 		if message=="LEFT" or message=="UP":
+			print "up"
 			#tell game to move his paddle up/left
-		else if message=="RIGHT" or message=="DOWN":
+		elif message=="RIGHT" or message=="DOWN":
+			print "down"
 			#tell game to move paddle right/down
+"""
+			
 			
