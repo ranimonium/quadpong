@@ -34,7 +34,7 @@ def connectToServer():
 	s = socket.socket()
 	s.connect((DEFAULT_SERVER_IP, myServerPort))
 	myConnection = connection.connection(s)
-	print myConnection.getMessage #or add this to the GUI later on
+	print myConnection.getMessage() #or add this to the GUI later on
 	
 """
 def playerAction():
