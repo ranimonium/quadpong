@@ -6,16 +6,11 @@ aka CS145 MP1
 ### Files ###
 * elements.py
  * contains the game elements
-* proto2p.py
- * DONE: draw elements on stage/arena
- * DONE: move players
- * DONE: move ball
-* proto3p.py
- * ignore this for now :(
 * proto4p.py
  * DONE: draw elements on arena
- * TODO: move players
- * TODO: move ball
+ * DONE: move players
+ * DONE: move ball
+ * TODO: NETWORKING STUFF !!!!!
  * TODO: scoring system
  * TODO: AI if ever a player quits
  * Nice-To-Have: powerups
@@ -27,7 +22,7 @@ Note: I'm thinking about scrapping the other modes and focusing on the 4-player 
 * See attached pdf
 
 #### Important dates: ####
-* 24 March 2014 (Mon) - Deadline of submission (online)
+* 27 March 2014 (Thus) - Deadline of submission (online), 11:59PM
 * 28 March 2014 (Fri) - Presentation
 
 #### Deliverables ####

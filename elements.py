@@ -22,49 +22,56 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 #set up directions = (dx, dy)
-NONE = (0, 0)
-N = (0, -1)
-E = (1, 0)
-W = (-1, 0)
-S = (0, 1)
-NE = (1, -1)
-SE = (1, 1)
-NW = (-1, -1)
-SW = (-1, 1)
-STRTDIR = [N,E,W,S]
-DIAGDIR = [NE,NW,SE,SW]
+DIR = {
+	'NONE': (0, 0),
+	'N': (0, -1),
+	'E': (1, 0),
+	'W': (-1, 0),
+	'S': (0, 1),
+	'NE': (1, -1),
+	'SE': (1, 1),
+	'NW': (-1, -1),
+	'SW': (-1, 1)
+	}
+
 
 #returns the supposed direction of the ball when it bounces
 def get_bounceDirection(direction, to):
 	new_dir = []
 	if to == 'vertical':
-		if direction == NE:
-			new_dir = NW
-		elif direction == NW:
-			new_dir = NE
-		elif direction == SE:
-			new_dir = SW
-		elif direction == SW:
-			new_dir = SE
+		if direction == DIR['NE']:
+			new_dir = DIR['NW']
+		elif direction == DIR['NW']:
+			new_dir = DIR['NE']
+		elif direction == DIR['SE']:
+			new_dir = DIR['SW']
+		elif direction == DIR['SW']:
+			new_dir = DIR['SE']
 	else:
-		if direction == NE:
-			new_dir = SE
-		elif direction == NW:
-			new_dir = SW
-		elif direction == SE:
-			new_dir = NE
-		elif direction == SW:
-			new_dir = NW
+		if direction == DIR['NE']:
+			new_dir = DIR['SE']
+		elif direction == DIR['NW']:
+			new_dir = DIR['SW']
+		elif direction == DIR['SE']:
+			new_dir = DIR['NE']
+		elif direction == DIR['SW']:
+			new_dir = DIR['NW']
 	return new_dir
 
-# class Stage:
-# 	"""docstring for Stage"""
-# 	MEH = 2
-# 	TRIANGLE = 3
-# 	SQUARE = 4
+def get_oppositeDirection(direction):
 
-# 	def __init__(self, edges):
-# 		self.edges = edges
+	new_dir = []
+
+	if direction == DIR['N']:
+		new_dir = DIR['S']
+	elif direction == DIR['S']:
+		new_dir = DIR['N']
+	elif direction == DIR['E']:
+		new_dir = DIR['W']
+	elif direction == DIR['W']:
+		new_dir = DIR['E']
+
+	return new_dir
 
 #sorry I'm not a fan of getters
 		
@@ -92,8 +99,12 @@ class Sprite:
 	def set_direction(self, direction):
 		self.direction = direction
 
+	def set_allowableDirection(self, directions):
+		self.allowDir = directions
+
 	def update_pos(self, speed):
 		self.set_pos( (self.x + speed*self.direction[0], self.y + speed*self.direction[1]) )
+
 
 class Ball(Sprite):
 	

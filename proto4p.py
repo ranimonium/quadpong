@@ -12,14 +12,14 @@ import elements as e
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 900
-WINDOWHEIGHT = 500
+WINDOWWIDTH = 800
+WINDOWHEIGHT = 600
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('ProtoPong 4')
 
 #set up timer
 clock = pygame.time.Clock()  
-FPS = 200 #Frames Per Second
+FPS = 30 #Frames Per Second
 
 # set up arena's "dimensions"
 arenaTOP = WINDOWHEIGHT/10
@@ -59,7 +59,7 @@ for p in players:
 
 #set up the ball
 ballWIDTH, ballHEIGHT = 14, 14
-ball = e.Ball( e.AQUA, [250, 250])
+ball = e.Ball( e.HOTPINK, [250, 250])
 		# [ random.randint(arenaLEFT+150, arenaLEFT+arenaWIDTH-150), #random x position of ball
 		# random.randint(arenaTOP+150,arenaTOP+arenaHEIGHT-150)]) #random y position of ball
 ball.set_direction(e.NE)
@@ -137,7 +137,7 @@ def manage_scoring(ball):
 		player_scored_i = [p.color for p in players].index(ball.color)
 		if player_scored_i != player_side: # to ensure that you won't score from your own loss
 			players[ player_scored_i ].add_score()
-		ball = e.Ball( e.AQUA, [250, 250])
+		ball = e.Ball( e.HOTPINK, [250, 250])
 		print ball.get_pos()
 		ball.set_direction(e.NE)
 
