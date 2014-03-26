@@ -12,7 +12,7 @@ pygame.init()
 # set up the window
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
-windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
+windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT + 100), 0, 32)
 pygame.display.set_caption('QuadPong')
 
 
@@ -60,7 +60,8 @@ PSPEED = 2	#paddle speed
 ballWIDTH, ballHEIGHT = 14, 14
 ball = e.Ball( e.HOTPINK, [250, 250])
 ball.set_direction(e.DIR['NE'])
-# ball.set_direction(random.choice(e.DIAGDIR))
+ball.set_heldBy(0) #default, player 0 holds ball
+
 BSPEED = 2	#ball speed
 
 ########## border coordinates and border lengths ##########
@@ -149,7 +150,7 @@ def game():
 			if paddle_i != -1:
 				players[paddle_i].set_direction(e.DIR['NONE'])
 
-	def manage_scoring(ball):
+	def manage_scoring():
 
 		# index of the player whose side had the ball come out:  0 - top; 1 - bottom; 2 - left; 3 - right
 		player_side = -1 
@@ -159,27 +160,31 @@ def game():
 		LEFT = 2
 		RIGHT = 3
 
-		if ball.x < -10:
+		if ball.x < -150:
 			player_side = LEFT
-		elif ball.x > WINDOWWIDTH+10:
+		elif ball.x > WINDOWWIDTH+150:
 			player_side = RIGHT
-		elif ball.y < -10:
+		elif ball.y < -150:
 			player_side = TOP
-		elif ball.y > WINDOWHEIGHT+10:
+		elif ball.y > WINDOWHEIGHT+150:
 			player_side = BOTTOM
+
 		if player_side != -1:
 			player_scored_i = [p.color for p in players].index(ball.color)
+
 			if player_scored_i != player_side: # to ensure that you won't score from your own loss
 				players[ player_scored_i ].add_score()
-			ball = e.Ball( e.DIR['HOTPINK'], [250, 250])
-			print ball.get_pos()
-			ball.set_direction(e.DIR['NE'])
+
+			#renew the ball
+			ball.set_color(players[player_side])
+			ball.set_heldBy(player_side)
+			ball.set_direction(e.DIR['NONE'])
 
 
 		for p in players:
-			print str(players.index(p)) + " " + str(p.score)
+			print str(p.username) + " " + str(p.score)
 
-		return ball
+				
 	 
 	#######################################################
 
@@ -194,9 +199,13 @@ def game():
 			
 			elif event.type == KEYDOWN:
 			
+						
 				if event.key == K_ESCAPE:
 					pygame.event.post(pygame.event.Event(QUIT))				
-
+				
+				elif event.key == K_SPACE and ball.heldBy == MY_ID:
+					ball.set_heldBy(-1)
+					
 				elif event.key == K_LEFT or event.key == K_a: 
 					players[MY_ID].set_direction(players[MY_ID].allowDir[0])
 				elif event.key == K_UP or event.key == K_w: 
@@ -234,8 +243,6 @@ def game():
 		for b in borders.values():
 			border_rects.append( pygame.draw.line(windowSurface, e.DIMMERGRAY, b[0], b[1], paddleWIDTH/2) )
 		
-		# draw the ball
-		ball_rect = pygame.draw.circle(windowSurface, ball.color, (ball.x, ball.y), ballWIDTH/2)
 
 		# draw the paddles
 		paddle_rects = []
@@ -244,7 +251,48 @@ def game():
 		for i in range(2,4):
 			paddle_rects.append(pygame.draw.line(windowSurface, players[i].color, (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT))
 
+
+		# draw the ball
+		if ball.heldBy == 0:
+			ball.set_pos( (paddle_rects[0].left + 2*paddleHEIGHT/3, paddle_rects[0].bottom + ballWIDTH/2) )
+		elif ball.heldBy == 1:
+			ball.set_pos( (paddle_rects[1].right - paddleHEIGHT/3, paddle_rects[1].top - ballHEIGHT/2) )
+		elif ball.heldBy == 2:
+			ball.set_pos( (paddle_rects[2].right + ballWIDTH/2 - 1, paddle_rects[2].top + paddleHEIGHT/3) )
+		elif ball.heldBy == 3:
+			ball.set_pos( (paddle_rects[3].left - ballWIDTH/2, paddle_rects[3].top + paddleHEIGHT/3) )
+		if ball.heldBy != -1:
+			ball.set_color(players[ball.heldBy].color)
+		ball_rect = pygame.draw.circle(windowSurface, ball.color, (ball.x, ball.y), ballWIDTH/2)
+
 		rects = [ball_rect, paddle_rects, border_rects] 
+
+		#draw scoreboard
+		pygame.draw.rect(windowSurface, e.DIMMERGRAY, [arenaLEFT, WINDOWHEIGHT-20, arenaWIDTH, 100], 0)
+		fontObj = pygame.font.SysFont("None", 42)
+		pname_coord = [
+				(arenaLEFT + 20, WINDOWHEIGHT-10),
+				(arenaLEFT + 20, WINDOWHEIGHT+35),
+				(arenaLEFT + arenaWIDTH/2 + 20, WINDOWHEIGHT-10),
+				(arenaLEFT + arenaWIDTH/2 + 20, WINDOWHEIGHT+35)
+			]
+		pscore_coord = [
+				(arenaLEFT + arenaWIDTH/2 - 60, WINDOWHEIGHT-10),
+				(arenaLEFT + arenaWIDTH/2 - 60, WINDOWHEIGHT+35),
+				(WINDOWWIDTH-100 - 60, WINDOWHEIGHT-10),
+				(WINDOWWIDTH-100 - 60, WINDOWHEIGHT+35)
+			]
+		for p in players:
+			msgSurfaceObj = fontObj.render(p.username, False, p.color)
+			msgRectobj = msgSurfaceObj.get_rect()
+			msgRectobj.topleft = pname_coord[players.index(p)]
+			windowSurface.blit(msgSurfaceObj, msgRectobj)
+
+			msgSurfaceObj = fontObj.render(str(p.score), False, p.color)
+			msgRectobj = msgSurfaceObj.get_rect()
+			msgRectobj.topleft = pscore_coord[players.index(p)]
+			windowSurface.blit(msgSurfaceObj, msgRectobj)
+
 
 		return rects
 
@@ -252,6 +300,7 @@ def game():
 
 	#################### GAME UPDATES #####################
 	def game_updates():
+		
 		#update ball position
 		ball.update_pos(BSPEED)
 		
@@ -274,6 +323,7 @@ def game():
 	
 	game_updates()
 	
+	manage_scoring()
 	#######################################################
 	
 
@@ -284,11 +334,11 @@ def over():
 
 
 curScene = 'game'
-MY_ID = 2
+MY_ID = 0
+ball.set_heldBy(MY_ID)
 
+#main application loop tralalalala
 while True:
-	
-	# windowSurface.fill((0,0,0))
 	
 	if curScene == 'home':
 		home()

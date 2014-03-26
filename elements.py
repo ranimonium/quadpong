@@ -109,20 +109,22 @@ class Sprite:
 class Ball(Sprite):
 	
 	def bounce(self, to):
-		# print "BOUNCE!"
-		# print self.direction
 		self.set_direction(get_bounceDirection(self.direction, to))
-		# print self.direction
-		
+	
+	def set_heldBy(self, heldBy):
+		self.heldBy = heldBy
+
 class Player(Sprite):
 	
 	def __init__(self, uid, color, pos):
-		# super(Player, self).__init__(color, pos)
 		Sprite.__init__(self, color, pos)
 		self.uid = uid
 		self.score = 0
+		self.username = "Player " + str(self.uid + 1)
 
 	def add_score(self):
 		self.score += 1 
 
+	def set_username(self):
+		pass
 # players = [Player(i) for i in range(4)]
