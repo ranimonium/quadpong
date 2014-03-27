@@ -11,6 +11,8 @@ BUFFER_SIZE=1024
 
 import socket
 import connection
+import thread
+
 
 TCP_IP = '0.0.0.0'
 
@@ -31,6 +33,7 @@ clients=[]
 	
 """
 def getClients():
+	global clients
 	sockets=[0 for i in xrange(0,NUMBER_OF_PLAYERS)]
 	
 	#initiate UDP socket where connection requests from clients come in
@@ -74,9 +77,27 @@ def getClients():
 			portnum+=1
 
 
-#initialize game
+def clientThread(client):
+	while True:
+		msg = client.getMessage()
+		print msg
+		for c in clients:
+			c.sendMessage(msg)
+		
+	
 
-getClients()
+
+#initialize game
+def beAGameServer():
+	getClients()
+	for c in clients:
+		thread.start_new_thread(clientThread, (c,))
+	while True:
+		j=1
+		
+
+beAGameServer()
+
 
 
 """
@@ -91,5 +112,4 @@ while True:
 			print "down"
 			#tell game to move paddle right/down
 """
-			
-			
+				
