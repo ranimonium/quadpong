@@ -4,22 +4,24 @@
 # 	game Multiplayer Pong.  
 
 #set up colors
-GOLD = (255, 215, 0)
-RED = (255, 0, 0)
-LIGHTCORAL = (240, 128, 128)
-HOTPINK = (255, 105, 180)
-GREEN = (0, 255, 0)
-SEAGREEN = (46, 139, 87)
-MEDIUMSPRINGGREEN = (0, 250, 154)
-AQUA = (0, 255, 255)
-MEDIUMBLUE = (0, 0, 205)
-CORNFLOWERBLUE = (100, 149, 237)
-DODGERBLUE = (30, 144, 255)
-DIMGRAY = (105, 105, 105)
-DIMMERGRAY = (80, 80, 80)
-DIMMESTGRAY = (25, 25, 25)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+COLOR = {
+	'GOLD': (255, 215, 0),
+	'RED': (255, 0, 0),
+	'LIGHTCORAL': (240, 128, 128),
+	'HOTPINK': (255, 105, 180),
+	'GREEN': (0, 255, 0),
+	'SEAGREEN': (46, 139, 87),
+	'MEDIUMSPRINGGREEN':  (0, 250, 154),
+	'AQUA': (0, 255, 255),
+	'MEDIUMBLUE': (0, 0, 205),
+	'CORNFLOWERBLUE': (100, 149, 237),
+	'DODGERBLUE': (30, 144, 255),
+	'DIMGRAY': (105, 105, 105),
+	'DIMMERGRAY': (80, 80, 80),
+	'DIMMESTGRAY': (25, 25, 25),
+	'BLACK': (0, 0, 0),
+	'WHITE': (255, 255, 255),
+}
 
 #set up directions = (dx, dy)
 DIR = {
@@ -39,23 +41,23 @@ DIR = {
 def get_bounceDirection(direction, to):
 	new_dir = []
 	if to == 'vertical':
-		if direction == DIR['NE']:
-			new_dir = DIR['NW']
-		elif direction == DIR['NW']:
-			new_dir = DIR['NE']
-		elif direction == DIR['SE']:
-			new_dir = DIR['SW']
-		elif direction == DIR['SW']:
-			new_dir = DIR['SE']
+		if direction == 'NE':
+			new_dir = 'NW'
+		elif direction == 'NW':
+			new_dir = 'NE'
+		elif direction == 'SE':
+			new_dir = 'SW'
+		elif direction == 'SW':
+			new_dir = 'SE'
 	else:
-		if direction == DIR['NE']:
-			new_dir = DIR['SE']
-		elif direction == DIR['NW']:
-			new_dir = DIR['SW']
-		elif direction == DIR['SE']:
-			new_dir = DIR['NE']
-		elif direction == DIR['SW']:
-			new_dir = DIR['NW']
+		if direction == 'NE':
+			new_dir = 'SE'
+		elif direction == 'NW':
+			new_dir = 'SW'
+		elif direction == 'SE':
+			new_dir = 'NE'
+		elif direction == 'SW':
+			new_dir = 'NW'
 	return new_dir
 
 def get_oppositeDirection(direction):
@@ -87,8 +89,10 @@ class Sprite:
 		self.set_pos(pos)
 
 	def set_color(self, color):
-		self.color = color
+		self.color = color  #this is a string
 
+	def get_colorValue(self):
+		return COLOR[self.color]
 	#pos is simply [x,y]
 	def set_pos(self, pos):
 		self.x, self.y = pos[0], pos[1]
@@ -97,13 +101,17 @@ class Sprite:
 		return (self.x, self.y)
 		
 	def set_direction(self, direction):
-		self.direction = direction
+		self.direction = direction #this is a string, a key to the DIR dictionry
+
+	def get_directionValue(self):
+		return DIR[self.direction]
 
 	def set_allowableDirection(self, directions):
 		self.allowDir = directions
 
 	def update_pos(self, speed):
-		self.set_pos( (self.x + speed*self.direction[0], self.y + speed*self.direction[1]) )
+		curDir = self.get_directionValue()
+		self.set_pos( (self.x + speed*curDir[0], self.y + speed*curDir[1]) )
 
 
 class Ball(Sprite):
@@ -125,6 +133,5 @@ class Player(Sprite):
 	def add_score(self):
 		self.score += 1 
 
-	def set_username(self):
-		pass
-# players = [Player(i) for i in range(4)]
+	def set_username(self, username):
+		self.username = username

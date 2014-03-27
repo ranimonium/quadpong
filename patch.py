@@ -19,8 +19,9 @@ pygame.display.set_caption('QuadPong')
 #####################  GAME CONFIGURATION  #####################
 
 ########## set up timer ##########
-clock = pygame.time.Clock()  
-FPS = 200 #Frames Per Second
+clock = pygame.time.Clock()
+# start_time = 
+frame_fate = 600 #Frames Per Second
 
 ########## set up arena's "dimensions" ##########
 arenaTOP = WINDOWHEIGHT/10
@@ -34,12 +35,12 @@ NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
-pcolors = [e.MEDIUMSPRINGGREEN, e.HOTPINK, e.GOLD, e.DODGERBLUE]
+pcolors = ['MEDIUMSPRINGGREEN', 'HOTPINK', 'GOLD', 'DODGERBLUE']
 pcoords = [
-		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP],									#player 0 top
-		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT)], 					#player 1 bottom
-		[arenaLEFT - 5, WINDOWHEIGHT/2 - paddleHEIGHT/2], 								#player 2 left
-		[(arenaLEFT + arenaWIDTH) - paddleWIDTH/2, WINDOWHEIGHT/2 - paddleHEIGHT/2],	#player 3 right
+		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP],					#player 0 top
+		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT)], 	#player 1 bottom
+		[arenaLEFT - 5, WINDOWHEIGHT/2], 								#player 2 left
+		[(arenaLEFT + arenaWIDTH) - paddleWIDTH/2, WINDOWHEIGHT/2],		#player 3 right
 	]
 
 # instantiate Player class from elements module
@@ -48,18 +49,18 @@ players = [e.Player(i, pcolors[i], pcoords[i]) for i in range(NUM_PLAYERS)]
 # set Player direction to be NONE (meaning they're not moving yet)
 for p in players:
 	if players.index(p) < 2:
-		p.set_allowableDirection( (e.DIR['W'], e.DIR['E']) )
+		p.set_allowableDirection( ('W', 'E') )
 	else:
-		p.set_allowableDirection( (e.DIR['N'], e.DIR['S']) )
-	p.set_direction(e.DIR['NONE'])
+		p.set_allowableDirection( ('N', 'S') )
+	p.set_direction('NONE')
 
 PSPEED = 2	#paddle speed
 
 
 ########## set up the ball ##########
-ballWIDTH, ballHEIGHT = 14, 14
-ball = e.Ball( e.HOTPINK, [250, 250])
-ball.set_direction(e.DIR['NE'])
+ballWIDTH, ballHEIGHT = 16, 16
+ball = e.Ball( 'HOTPINK', [250, 250])
+ball.set_direction('NE')
 ball.set_heldBy(0) #default, player 0 holds ball
 
 BSPEED = 2	#ball speed
@@ -84,7 +85,21 @@ borders = {
 DEFAULT_SERVER_IP="127.0.0.1"
 DEFAULT_SERVER_PORT=1234
 
-# blah kayo na magtuloy nito
+### SHIZ TO SEND ###
+ball_status = []
+own_status = [] #contains own points too
+
+def send_shiz():
+	shizSendMsg = '$$SHIZ$$'.join( [ '$$BALLSTATUS'.join(ball_status), '$$PSTATUS$$'.join(own_status) ] )
+	# print shizSendMsg
+	pass
+
+
+### SHIZ TO RECV ###
+others_status = [] # countains others' points too
+
+def recv_shiz():
+	pass
 
 ################################################################
 
@@ -101,16 +116,31 @@ def home():
 
 ############ WAITING FOR OTHER PLAYERS TO CONNECT ############ 
 def wait():
+	# connect to server
+	# receive updates about the connection of other clients to server
+	
+
+	# curScene = 'setPlayer'
 	pass
 
 
 ############ LETTING PLAYERS CHOOSE THEIR PADDLE COLOR/INSTRUCTIONS PAGE ############ 
 def setPlayer():
+	#30 seconds to choose an 8-character name
+	#choose color?
+
+
+	#curScence = 'game'
 	pass
 
 
 ############ GAME SCENE ############ 
 def game():
+
+	#################### GAME TIMER FCN ####################	
+
+
+
 
 
 	#################### GAME FUCTIONS ####################
@@ -118,8 +148,11 @@ def game():
 
 	# handles collisions for both the paddle and the borders
 	def handle_ballCollisions(ball_rect, rects, isPaddle=True):
-		ball_rect.x += ball.direction[0]
-		ball_rect.y += ball.direction[1]
+		
+		ballDir = ball.get_directionValue()
+
+		ball_rect.x += ballDir[0]
+		ball_rect.y += ballDir[1]
 
 		rect_i = ball_rect.collidelist(rects)
 		
@@ -141,14 +174,14 @@ def game():
 	#handle paddle-border limitations
 	def handle_borderPaddleCollisions(border_rects, paddle_rects):
 		for p in paddle_rects:
-			# print paddle_rects.index(p)
-			p.x += players[paddle_rects.index(p)].direction[0]
-			p.y += players[paddle_rects.index(p)].direction[1]
+			pDir = players[paddle_rects.index(p)].get_directionValue()
+			p.x += pDir[0]
+			p.y += pDir[1]
 
 		for b in border_rects:
 			paddle_i = b.collidelist(paddle_rects)
 			if paddle_i != -1:
-				players[paddle_i].set_direction(e.DIR['NONE'])
+				players[paddle_i].set_direction('NONE')
 
 	def manage_scoring():
 
@@ -170,23 +203,21 @@ def game():
 			player_side = BOTTOM
 
 		if player_side != -1:
-			player_scored_i = [p.color for p in players].index(ball.color)
+			player_scored_i = [p.get_colorValue() for p in players].index(ball.get_colorValue())
 
 			if player_scored_i != player_side: # to ensure that you won't score from your own loss
 				players[ player_scored_i ].add_score()
-
+				print "Score for " + players[ player_scored_i ].username
+				print "Scores:"
+				for p in players:
+					print str(p.username) + " " + str(p.score)
 			#renew the ball
-			ball.set_color(players[player_side])
+			ball.set_color(players[player_side].color)
 			ball.set_heldBy(player_side)
-			ball.set_direction(e.DIR['NONE'])
-
-
-		for p in players:
-			print str(p.username) + " " + str(p.score)
-
-				
+			ball.set_direction('NE')
 	 
 	#######################################################
+
 
 	##################### GAME EVENTS #####################
 	def game_events():
@@ -217,13 +248,13 @@ def game():
 
 			elif event.type == KEYUP:
 				if event.key == K_LEFT or event.key == K_RIGHT:
-					players[MY_ID].set_direction(e.DIR['NONE'])
+					players[MY_ID].set_direction('NONE')
 				elif event.key == K_a or event.key == K_d:
-					players[MY_ID].set_direction(e.DIR['NONE'])
+					players[MY_ID].set_direction('NONE')
 				elif event.key == K_w or event.key == K_s:
-					players[MY_ID].set_direction(e.DIR['NONE'])
+					players[MY_ID].set_direction('NONE')
 				elif event.key == K_UP or event.key == K_DOWN:
-					players[MY_ID].set_direction(e.DIR['NONE'])
+					players[MY_ID].set_direction('NONE')
 
 	#######################################################
 
@@ -231,25 +262,25 @@ def game():
 	################### DRAW COMPONENTS ###################
 	
 	def draw_components():
-		pass
+		
 		# paint background
-		windowSurface.fill(e.DIMMESTGRAY)
+		windowSurface.fill(e.COLOR['DIMMESTGRAY'])
 		
 		# draw stage borders
-		pygame.draw.rect(windowSurface, e.DIMGRAY, [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
+		pygame.draw.rect(windowSurface, e.COLOR['DIMGRAY'], [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
 		border_rects = []
 
 		# print borders
 		for b in borders.values():
-			border_rects.append( pygame.draw.line(windowSurface, e.DIMMERGRAY, b[0], b[1], paddleWIDTH/2) )
+			border_rects.append( pygame.draw.line(windowSurface, e.COLOR['DIMMERGRAY'], b[0], b[1], paddleWIDTH/2) )
 		
 
 		# draw the paddles
 		paddle_rects = []
-		for i in range(2):
-			paddle_rects.append(pygame.draw.line(windowSurface, players[i].color, (players[i].x, players[i].y), (players[i].x + paddleHEIGHT, players[i].y), paddleWIDTH))
-		for i in range(2,4):
-			paddle_rects.append(pygame.draw.line(windowSurface, players[i].color, (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT))
+		for i in range(2): #top bottom
+			paddle_rects.append(pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleHEIGHT, players[i].y), paddleWIDTH))
+		for i in range(2,4): #left right
+			paddle_rects.append(pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT))
 
 
 		# draw the ball
@@ -263,12 +294,12 @@ def game():
 			ball.set_pos( (paddle_rects[3].left - ballWIDTH/2, paddle_rects[3].top + paddleHEIGHT/3) )
 		if ball.heldBy != -1:
 			ball.set_color(players[ball.heldBy].color)
-		ball_rect = pygame.draw.circle(windowSurface, ball.color, (ball.x, ball.y), ballWIDTH/2)
+		ball_rect = pygame.draw.circle(windowSurface, ball.get_colorValue(), (ball.x, ball.y), ballWIDTH/2)
 
 		rects = [ball_rect, paddle_rects, border_rects] 
 
 		#draw scoreboard
-		pygame.draw.rect(windowSurface, e.DIMMERGRAY, [arenaLEFT, WINDOWHEIGHT-20, arenaWIDTH, 100], 0)
+		pygame.draw.rect(windowSurface, e.COLOR['DIMMERGRAY'], [arenaLEFT, WINDOWHEIGHT-20, arenaWIDTH, 100], 0)
 		fontObj = pygame.font.SysFont("None", 42)
 		pname_coord = [
 				(arenaLEFT + 20, WINDOWHEIGHT-10),
@@ -282,13 +313,14 @@ def game():
 				(WINDOWWIDTH-100 - 60, WINDOWHEIGHT-10),
 				(WINDOWWIDTH-100 - 60, WINDOWHEIGHT+35)
 			]
+
 		for p in players:
-			msgSurfaceObj = fontObj.render(p.username, False, p.color)
+			msgSurfaceObj = fontObj.render(p.username, False, p.get_colorValue())
 			msgRectobj = msgSurfaceObj.get_rect()
 			msgRectobj.topleft = pname_coord[players.index(p)]
 			windowSurface.blit(msgSurfaceObj, msgRectobj)
 
-			msgSurfaceObj = fontObj.render(str(p.score), False, p.color)
+			msgSurfaceObj = fontObj.render(str(p.score), False, p.get_colorValue())
 			msgRectobj = msgSurfaceObj.get_rect()
 			msgRectobj.topleft = pscore_coord[players.index(p)]
 			windowSurface.blit(msgSurfaceObj, msgRectobj)
@@ -301,12 +333,21 @@ def game():
 	#################### GAME UPDATES #####################
 	def game_updates():
 		
+		global ball_status
+		global own_status
+
 		#update ball position
 		ball.update_pos(BSPEED)
+		
+		# prepare ball for sending
+		ball_status = [ ball.color, ball.direction, str(ball.x), str(ball.y)]
 		
 		#update paddle positions
 		for p in players:
 			p.update_pos(PSPEED)
+
+		#prepare own paddle status for sending
+		own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
 
 	#######################################################
 
@@ -324,6 +365,11 @@ def game():
 	game_updates()
 	
 	manage_scoring()
+
+	# --- Networking Part ---
+	send_shiz()
+	recv_shiz()
+
 	#######################################################
 	
 
@@ -334,7 +380,7 @@ def over():
 
 
 curScene = 'game'
-MY_ID = 0
+MY_ID = 2
 ball.set_heldBy(MY_ID)
 
 #main application loop tralalalala
@@ -352,4 +398,4 @@ while True:
 		over()
 
 	pygame.display.update()
-	clock.tick(FPS)
+	clock.tick(frame_fate)
