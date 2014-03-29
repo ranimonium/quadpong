@@ -8,6 +8,9 @@
 
 import socket
 import connection
+import time
+import random
+import thread
 
 DEFAULT_SERVER_IP="127.0.0.1"
 DEFAULT_SERVER_PORT=1234
@@ -33,6 +36,7 @@ def connectToServer():
 	
 	s = socket.socket()
 	s.connect((DEFAULT_SERVER_IP, myServerPort))
+	global myConnection
 	myConnection = connection.connection(s)
 	print myConnection.getMessage() #or add this to the GUI later on
 	
@@ -47,6 +51,21 @@ def updateGameScreen():
 	#client receives new game state from server
 	#relays information to game which will update the GUI
 """
-	
+
+
+def foreverReceive():
+	while True:
+		msg = myConnection.getMessage()
+		if msg: print msg
+		
+def foreverSend():
+	while True:
+		time.sleep(random.randint(0,5))
+		msg = raw_input("Say something: ")
+		myConnection.sendMessage(msg)
 
 connectToServer()
+thread.start_new_thread(foreverSend, ())
+thread.start_new_thread(foreverReceive,())
+while True:
+	j=1
