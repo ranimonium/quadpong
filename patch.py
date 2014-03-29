@@ -1,8 +1,8 @@
 import pygame, sys, time, random
 from pygame.locals import *
 import elements as e
-# import socket
-# import connection
+import socket
+import connection
 
 ####################  PYGAME CONFIGURATION  ####################
 
@@ -10,8 +10,8 @@ import elements as e
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 800
-WINDOWHEIGHT = 600
+WINDOWWIDTH = 100
+WINDOWHEIGHT = 100
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT + 100), 0, 32)
 pygame.display.set_caption('QuadPong')
 
@@ -84,22 +84,78 @@ borders = {
 
 DEFAULT_SERVER_IP="127.0.0.1"
 DEFAULT_SERVER_PORT=1234
+CONNECTION_REQUEST_MESSAGE="join game"
+BUFFER_SIZE=1024
+
+myServerPort=DEFAULT_SERVER_PORT
+myConnection=None
+
+def connectToServer():
+	global myConnection
+	global MY_ID
+
+	udpsocket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	udpsocket.sendto(CONNECTION_REQUEST_MESSAGE, (DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT))
+	data, addr = udpsocket.recvfrom(BUFFER_SIZE)
+	myServerPort = int(data)
+	
+	print "Will connect to ", data
+	
+	s = socket.socket()
+	s.connect((DEFAULT_SERVER_IP, myServerPort))
+	
+	myConnection = connection.connection(s)
+	print myConnection.getMessage() #or add this to the GUI later on
+
 
 ### SHIZ TO SEND ###
 ball_status = []
 own_status = [] #contains own points too
 
-def send_shiz():
-	shizSendMsg = '$$SHIZ$$'.join( [ '$$BALLSTATUS'.join(ball_status), '$$PSTATUS$$'.join(own_status) ] )
-	# print shizSendMsg
-	pass
+def send_shiz(clientMessage):
+	
+	# shizSendMsg = str(MY_ID) + clientMessage
+	if clientMessage == "NOTH":
+		pass
+	elif clientMessage == "MYID":
+		myConnection.sendMessage(clientMessage)
+	elif clientMessage == "BALL":
+		pass # shizSendMsg += '$$BALLSTATUS'.join(ball_status)
+	elif clientMessage == "PLYR":
+		pass # shizSendMsg += '$$PSTATUS$$'.join(own_status)
+	elif clientMessage == "DONE":
+		myConnection.sendMessage(clientMessage)
+	# print "I SEND THE SHIT " + clientMessage
+	#myConnection.sendMessage(shizSendMsg)
+	# shizSendMsg = '$$SHIZ$$'.join( [ '$$BALLSTATUS'.join(ball_status), '$$PSTATUS$$'.join(own_status) ] )
 
 
 ### SHIZ TO RECV ###
-others_status = [] # countains others' points too
+others_status = [] # contains others' points too
 
 def recv_shiz():
-	pass
+
+	msg = myConnection.getMessage()
+	serverMessage = msg[:4]
+
+	# print "message from server : " + msg
+
+	if serverMessage == "NOTH":
+		pass
+	elif serverMessage == "MYID":
+		return str(msg[4:])
+	elif serverMessage == "BALL":
+		pass
+	elif serverMessage == "PLYR":
+		pass
+	elif serverMessage == "TIME":
+		pass
+	elif serverMessage == "OKAY":
+		pass
+	elif serverMessage == "DONE":
+		return str(msg[4:])
+
+
 
 ################################################################
 
@@ -116,12 +172,27 @@ def home():
 
 ############ WAITING FOR OTHER PLAYERS TO CONNECT ############ 
 def wait():
-	# connect to server
-	# receive updates about the connection of other clients to server
 	
+	global curScene
+	global MY_ID
 
-	# curScene = 'setPlayer'
-	pass
+	# connect to server
+	if MY_ID == None:
+		connectToServer()
+		send_shiz("MYID")
+		MY_ID = recv_shiz()
+	
+	print MY_ID
+
+	while True:
+		send_shiz("DONE")
+		isDone = recv_shiz()
+		# print "DONE"
+		print isDone
+		# print "MEHEHE"
+		if isDone == "True":
+			curScene = 'game'
+			break
 
 
 ############ LETTING PLAYERS CHOOSE THEIR PADDLE COLOR/INSTRUCTIONS PAGE ############ 
@@ -367,8 +438,8 @@ def game():
 	manage_scoring()
 
 	# --- Networking Part ---
-	send_shiz()
-	recv_shiz()
+	# send_shiz("NOTH")
+	# recv_shiz()
 
 	#######################################################
 	
@@ -379,8 +450,8 @@ def over():
 	pass
 
 
-curScene = 'game'
-MY_ID = 2
+curScene = 'wait'
+MY_ID = None
 ball.set_heldBy(MY_ID)
 
 #main application loop tralalalala

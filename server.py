@@ -11,10 +11,16 @@ BUFFER_SIZE=1024
 
 import socket
 import connection
+import thread
+
 
 TCP_IP = '0.0.0.0'
 
 clients=[]
+players=[]
+ball_statuses = []
+
+players_Complete = "False"
 
 #wait for clients to join
 """
@@ -31,6 +37,9 @@ clients=[]
 	
 """
 def getClients():
+	global clients
+	global players_Complete
+
 	sockets=[0 for i in xrange(0,NUMBER_OF_PLAYERS)]
 	
 	#initiate UDP socket where connection requests from clients come in
@@ -69,14 +78,76 @@ def getClients():
 			clients.append(connection.connection(remote_socket))
 			clients[s].sendMessage("You have successfully joined the game")
 			
+			thread.start_new_thread(recv_shiz, (clients[s],))
+			thread.start_new_thread(send_shiz, (clients[s],))
+			
 			print portnum
 			s+=1
 			portnum+=1
 
+	#getting clients complete
+	players_Complete = "True"
+
+def send_shiz(client):
+	pass
+	# global players_Complete
+
+	# if players_Complete == "True":
+	# 	for c in clients:
+	# 		c.sendMessage(players_Complete)
+	# 	players_Complete = "done now, stop sending players_Complete"
+
+
+### SHIZ TO RECV ###
+others_status = [] # contains others' points too
+
+def recv_shiz(client):
+	while True:
+		msg = client.getMessage()
+		print "I RECEIVED THE SHIT " + msg
+		
+		clientMessage = msg[:4]
+
+		if clientMessage == "NOTH":
+			pass
+		elif clientMessage == "MYID":
+			client.sendMessage( clientMessage + str(clients.index(client)) )
+		elif clientMessage == "BALL":
+			pass
+		elif clientMessage == "PLYR":
+			pass
+		elif clientMessage == "DONE":
+			# print clientMessage
+			client.sendMessage( clientMessage + players_Complete )
+	
+	
+
+
+
+
+
+def clientThread(client):
+	while True:
+		msg = client.getMessage()
+		print msg
+		for c in clients:
+			c.sendMessage(msg)
+		
+	
+
 
 #initialize game
+def beAGameServer():
+	getClients()
+	# for c in clients:
+	# 	thread.start_new_thread(clientThread, (c,))
+	while True:
+		# print "here"
+		j=1
+		
 
-getClients()
+beAGameServer()
+
 
 
 """
@@ -91,5 +162,4 @@ while True:
 			print "down"
 			#tell game to move paddle right/down
 """
-			
 			
