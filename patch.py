@@ -1,8 +1,6 @@
-import pygame, sys, time, random
+import pygame, sys, time, random, thread, connection, socket
 from pygame.locals import *
 import elements as e
-import socket
-import connection
 
 ####################  PYGAME CONFIGURATION  ####################
 
@@ -10,8 +8,8 @@ import connection
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 100
-WINDOWHEIGHT = 100
+WINDOWWIDTH = 400
+WINDOWHEIGHT = 400
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT + 100), 0, 32)
 pygame.display.set_caption('QuadPong')
 
@@ -105,6 +103,7 @@ def connectToServer():
 	s.connect((DEFAULT_SERVER_IP, myServerPort))
 	
 	myConnection = connection.connection(s)
+
 	print myConnection.getMessage() #or add this to the GUI later on
 
 
@@ -122,7 +121,7 @@ def send_shiz(clientMessage):
 	elif clientMessage == "BALL":
 		pass # shizSendMsg += '$$BALLSTATUS'.join(ball_status)
 	elif clientMessage == "PLYR":
-		pass # shizSendMsg += '$$PSTATUS$$'.join(own_status)
+		myConnection.sendMessage( clientMessage + str(MY_ID) + '$$PSTATUS$$'.join(own_status))
 	elif clientMessage == "DONE":
 		myConnection.sendMessage(clientMessage)
 	# print "I SEND THE SHIT " + clientMessage
@@ -135,25 +134,45 @@ others_status = [] # contains others' points too
 
 def recv_shiz():
 
-	msg = myConnection.getMessage()
-	serverMessage = msg[:4]
+	while True:
 
-	# print "message from server : " + msg
+		msg = myConnection.getMessage()
+		serverMessage = msg[:4]
 
-	if serverMessage == "NOTH":
-		pass
-	elif serverMessage == "MYID":
-		return str(msg[4:])
-	elif serverMessage == "BALL":
-		pass
-	elif serverMessage == "PLYR":
-		pass
-	elif serverMessage == "TIME":
-		pass
-	elif serverMessage == "OKAY":
-		pass
-	elif serverMessage == "DONE":
-		return str(msg[4:])
+		# print "message from server : " + msg
+
+		if serverMessage == "NOTH":
+			pass
+		elif serverMessage == "MYID":
+			return int(msg[4:])
+		elif serverMessage == "BALL":
+			pass
+		elif serverMessage == "PLYR":
+			
+			global players
+
+			print "I received PLYR!"
+			ID = int(msg[4])
+			player_stats = msg[5:]
+			player_stats = player_stats.split("$$PSTATUS$$")
+			
+			players[ID].uid = int(player_stats[0])
+			players[ID].x = int(player_stats[1])
+			players[ID].y = int(player_stats[2])
+			players[ID].score = int(player_stats[3])
+			players[ID].color = player_stats[4]
+			players[ID].direction = player_stats[5]
+
+			print player_stats
+			# this shit was from:
+			# own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+		elif serverMessage == "TIME":
+			pass
+		elif serverMessage == "OKAY":
+			pass
+		elif serverMessage == "DONE":
+			return str(msg[4:])
+
 
 
 
@@ -181,7 +200,6 @@ def wait():
 		connectToServer()
 		send_shiz("MYID")
 		MY_ID = recv_shiz()
-	
 	print MY_ID
 
 	while True:
@@ -192,6 +210,7 @@ def wait():
 		# print "MEHEHE"
 		if isDone == "True":
 			curScene = 'game'
+			thread.start_new_thread(recv_shiz, ())
 			break
 
 
@@ -413,12 +432,17 @@ def game():
 		# prepare ball for sending
 		ball_status = [ ball.color, ball.direction, str(ball.x), str(ball.y)]
 		
+		for p in players:
+			recv_shiz
+
 		#update paddle positions
 		for p in players:
 			p.update_pos(PSPEED)
 
 		#prepare own paddle status for sending
-		own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
+		own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+		send_shiz("PLYR")
+		# own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
 
 	#######################################################
 
@@ -452,7 +476,7 @@ def over():
 
 curScene = 'wait'
 MY_ID = None
-ball.set_heldBy(MY_ID)
+ball.set_heldBy(0)
 
 #main application loop tralalalala
 while True:
@@ -469,4 +493,5 @@ while True:
 		over()
 
 	pygame.display.update()
-	clock.tick(frame_fate)
+	# clock.tick(frame_fate)
+	time.sleep(0.1)

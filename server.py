@@ -17,8 +17,8 @@ import thread
 TCP_IP = '0.0.0.0'
 
 clients=[]
-players=[]
-ball_statuses = []
+# player_stats=[]
+ball_stats = []
 
 players_Complete = "False"
 
@@ -39,6 +39,7 @@ players_Complete = "False"
 def getClients():
 	global clients
 	global players_Complete
+	# global player_stats
 
 	sockets=[0 for i in xrange(0,NUMBER_OF_PLAYERS)]
 	
@@ -75,9 +76,12 @@ def getClients():
 			
 			sockets[s].listen(1)
 			remote_socket, addr = sockets[s].accept()
+			
 			clients.append(connection.connection(remote_socket))
 			clients[s].sendMessage("You have successfully joined the game")
 			
+			# player_stats.append("")
+
 			thread.start_new_thread(recv_shiz, (clients[s],))
 			thread.start_new_thread(send_shiz, (clients[s],))
 			
@@ -104,7 +108,7 @@ others_status = [] # contains others' points too
 def recv_shiz(client):
 	while True:
 		msg = client.getMessage()
-		print "I RECEIVED THE SHIT " + msg
+		# print "I RECEIVED THE SHIT " + msg
 		
 		clientMessage = msg[:4]
 
@@ -115,12 +119,13 @@ def recv_shiz(client):
 		elif clientMessage == "BALL":
 			pass
 		elif clientMessage == "PLYR":
-			pass
+			for c in clients:
+				c.sendMessage( msg )
 		elif clientMessage == "DONE":
 			# print clientMessage
 			client.sendMessage( clientMessage + players_Complete )
 	
-	
+		
 
 
 
