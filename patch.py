@@ -118,8 +118,6 @@ def send_shiz(clientMessage):
 		pass
 	elif clientMessage == "MYID":
 		myConnection.sendMessage(clientMessage)
-	elif clientMessage == "BALL":
-		pass # shizSendMsg += '$BALL$'.join(ball_status)
 	elif clientMessage == "PLYR":
 		myConnection.sendMessage( clientMessage + str(MY_ID) + '$PLYR$'.join(own_status) + "~ENDDATA~")
 	elif clientMessage == "DONE":
@@ -145,13 +143,11 @@ def recv_shiz():
 			pass
 		elif serverMessage == "MYID":
 			return int(msg[4:])
-		elif serverMessage == "BALL":
-			pass
 		elif serverMessage == "PLYR":
 			
 			global players
 
-			print "I received PLYR!"
+			# print "I received PLYR!"
 
 			# mergeCount = msg.count("~ENDDATA~")
 
@@ -159,13 +155,13 @@ def recv_shiz():
 
 			for m in msg:
 				if len(m) > 1: #handle the empty part
-					print m
+					# print m
 					ID = int(m[4])
 					if ID != MY_ID:
 						player_stats = m[5:]
 						player_stats = player_stats.split("$PLYR$")
 						
-						print player_stats
+						# print player_stats
 						
 						players[ID].uid = int(player_stats[0])
 						players[ID].x = int(player_stats[1])
@@ -174,8 +170,12 @@ def recv_shiz():
 						players[ID].color = player_stats[4]
 						players[ID].direction = player_stats[5]
 
+						# wew defeats the purpose of this whole shit
+						if ID == ball.heldBy:
+							ball.set_heldBy(int(player_stats[6]))
+
 			# this shit was from:
-			# own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+			# own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, str(ball.heldBy)]
 		elif serverMessage == "TIME":
 			pass
 		elif serverMessage == "OKAY":
@@ -220,16 +220,6 @@ def wait():
 			curScene = 'game'
 			thread.start_new_thread(recv_shiz, ())
 			break
-
-
-############ LETTING PLAYERS CHOOSE THEIR PADDLE COLOR/INSTRUCTIONS PAGE ############ 
-def setPlayer():
-	#30 seconds to choose an 8-character name
-	#choose color?
-
-
-	#curScence = 'game'
-	pass
 
 
 ############ GAME SCENE ############ 
@@ -334,7 +324,7 @@ def game():
 				
 				elif event.key == K_SPACE and ball.heldBy == MY_ID:
 					ball.set_heldBy(-1)
-					
+
 				elif event.key == K_LEFT or event.key == K_a: 
 					players[MY_ID].set_direction(players[MY_ID].allowDir[0])
 				elif event.key == K_UP or event.key == K_w: 
@@ -436,19 +426,13 @@ def game():
 
 		#update ball position
 		ball.update_pos(BSPEED)
-		
-		# prepare ball for sending
-		ball_status = [ ball.color, ball.direction, str(ball.x), str(ball.y)]
-		
-		# for p in players:
-		# 	recv_shiz
 
 		#update paddle positions
 		for p in players:
 			p.update_pos(PSPEED)
 
-		#prepare own paddle status for sending
-		own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+		#prepare own paddle status for sending + ball.heldBy shit
+		own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, str(ball.heldBy)]
 		send_shiz("PLYR")
 		# own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
 

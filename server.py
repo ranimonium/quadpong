@@ -131,10 +131,8 @@ def recv_shiz(client):
 			pass
 		elif clientMessage == "MYID":
 			client.sendMessage( clientMessage + str(clients.index(client)) )
-		elif clientMessage == "BALL":
-			pass
 		elif clientMessage == "PLYR":
-			print msg
+			# print msg
 			for c in clients:
 				c.sendMessage( msg )
 		elif clientMessage == "DONE":
