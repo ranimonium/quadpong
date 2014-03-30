@@ -119,14 +119,14 @@ def send_shiz(clientMessage):
 	elif clientMessage == "MYID":
 		myConnection.sendMessage(clientMessage)
 	elif clientMessage == "BALL":
-		pass # shizSendMsg += '$$BALLSTATUS'.join(ball_status)
+		pass # shizSendMsg += '$BALL$'.join(ball_status)
 	elif clientMessage == "PLYR":
-		myConnection.sendMessage( clientMessage + str(MY_ID) + '$$PSTATUS$$'.join(own_status))
+		myConnection.sendMessage( clientMessage + str(MY_ID) + '$PLYR$'.join(own_status) + "~ENDDATA~")
 	elif clientMessage == "DONE":
 		myConnection.sendMessage(clientMessage)
 	# print "I SEND THE SHIT " + clientMessage
 	#myConnection.sendMessage(shizSendMsg)
-	# shizSendMsg = '$$SHIZ$$'.join( [ '$$BALLSTATUS'.join(ball_status), '$$PSTATUS$$'.join(own_status) ] )
+	# shizSendMsg = '$$SHIZ$$'.join( [ '$BALL$'.join(ball_status), '$PLYR$'.join(own_status) ] )
 
 
 ### SHIZ TO RECV ###
@@ -163,7 +163,7 @@ def recv_shiz():
 					ID = int(m[4])
 					if ID != MY_ID:
 						player_stats = m[5:]
-						player_stats = player_stats.split("$$PSTATUS$$")
+						player_stats = player_stats.split("$PLYR$")
 						
 						print player_stats
 						
@@ -440,8 +440,8 @@ def game():
 		# prepare ball for sending
 		ball_status = [ ball.color, ball.direction, str(ball.x), str(ball.y)]
 		
-		for p in players:
-			recv_shiz
+		# for p in players:
+		# 	recv_shiz
 
 		#update paddle positions
 		for p in players:
@@ -468,10 +468,6 @@ def game():
 	game_updates()
 	
 	manage_scoring()
-
-	# --- Networking Part ---
-	# send_shiz("NOTH")
-	# recv_shiz()
 
 	#######################################################
 	

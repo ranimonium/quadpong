@@ -136,7 +136,7 @@ def recv_shiz(client):
 		elif clientMessage == "PLYR":
 			print msg
 			for c in clients:
-				c.sendMessage( msg + "~ENDDATA~")
+				c.sendMessage( msg )
 		elif clientMessage == "DONE":
 			# print clientMessage
 			client.sendMessage( clientMessage + players_Complete )
