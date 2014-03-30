@@ -11,12 +11,16 @@ BUFFER_SIZE=1024
 
 import socket
 import connection
-import thread
+import threading
+import sys
+# import thread
 
 
 TCP_IP = '0.0.0.0'
 
 clients=[]
+threads = []
+
 # player_stats=[]
 ball_stats = []
 
@@ -63,6 +67,9 @@ def getClients():
 	#turn into threads eventually
 	s=0
 	portnum=2001
+
+	print "Waiting..."
+
 	while len(clients)<NUMBER_OF_PLAYERS:
 		#udpsocket.listen(5)
 		data, addr = udpsocket.recvfrom(BUFFER_SIZE)
@@ -78,12 +85,16 @@ def getClients():
 			remote_socket, addr = sockets[s].accept()
 			
 			clients.append(connection.connection(remote_socket))
-			clients[s].sendMessage("You have successfully joined the game")
 			
-			# player_stats.append("")
+			# threading shiz
+			thread = threading.Thread(target=recv_shiz,args=(clients[s],))
+			thread.start()
+			threads.append(thread)
 
-			thread.start_new_thread(recv_shiz, (clients[s],))
-			thread.start_new_thread(send_shiz, (clients[s],))
+			clients[s].sendMessage("You have successfully joined the game")
+
+			# thread.start_new_thread(recv_shiz, (clients[s],))
+			# thread.start_new_thread(send_shiz, (clients[s],))
 			
 			print portnum
 			s+=1
@@ -91,6 +102,10 @@ def getClients():
 
 	#getting clients complete
 	players_Complete = "True"
+
+	#joining the threads
+	for thread in threads:
+		thread.join()
 
 def send_shiz(client):
 	pass
@@ -119,13 +134,12 @@ def recv_shiz(client):
 		elif clientMessage == "BALL":
 			pass
 		elif clientMessage == "PLYR":
+			print msg
 			for c in clients:
-				c.sendMessage( msg )
+				c.sendMessage( msg + "~ENDDATA~")
 		elif clientMessage == "DONE":
 			# print clientMessage
 			client.sendMessage( clientMessage + players_Complete )
-	
-		
 
 
 
@@ -150,9 +164,12 @@ def beAGameServer():
 		# print "here"
 		j=1
 		
-
-beAGameServer()
-
+try:
+	beAGameServer()
+except Exception as e:
+	print e
+finally:
+	sys.exit()
 
 
 """

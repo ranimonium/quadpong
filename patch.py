@@ -152,18 +152,28 @@ def recv_shiz():
 			global players
 
 			print "I received PLYR!"
-			ID = int(msg[4])
-			player_stats = msg[5:]
-			player_stats = player_stats.split("$$PSTATUS$$")
-			
-			players[ID].uid = int(player_stats[0])
-			players[ID].x = int(player_stats[1])
-			players[ID].y = int(player_stats[2])
-			players[ID].score = int(player_stats[3])
-			players[ID].color = player_stats[4]
-			players[ID].direction = player_stats[5]
 
-			print player_stats
+			# mergeCount = msg.count("~ENDDATA~")
+
+			msg = msg.split("~ENDDATA~")
+
+			for m in msg:
+				if len(m) > 1: #handle the empty part
+					print m
+					ID = int(m[4])
+					if ID != MY_ID:
+						player_stats = m[5:]
+						player_stats = player_stats.split("$$PSTATUS$$")
+						
+						print player_stats
+						
+						players[ID].uid = int(player_stats[0])
+						players[ID].x = int(player_stats[1])
+						players[ID].y = int(player_stats[2])
+						players[ID].score = int(player_stats[3])
+						players[ID].color = player_stats[4]
+						players[ID].direction = player_stats[5]
+
 			# this shit was from:
 			# own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
 		elif serverMessage == "TIME":
@@ -205,10 +215,8 @@ def wait():
 	while True:
 		send_shiz("DONE")
 		isDone = recv_shiz()
-		# print "DONE"
-		print isDone
-		# print "MEHEHE"
 		if isDone == "True":
+			print isDone
 			curScene = 'game'
 			thread.start_new_thread(recv_shiz, ())
 			break
@@ -493,5 +501,5 @@ while True:
 		over()
 
 	pygame.display.update()
-	# clock.tick(frame_fate)
-	time.sleep(0.1)
+	clock.tick(frame_fate)
+	# time.sleep(0.1)
