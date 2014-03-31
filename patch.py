@@ -8,8 +8,8 @@ import elements as e
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 400
-WINDOWHEIGHT = 400
+WINDOWWIDTH = 800
+WINDOWHEIGHT = 600
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT + 100), 0, 32)
 pygame.display.set_caption('QuadPong')
 
@@ -104,31 +104,21 @@ def connectToServer():
 	
 	myConnection = connection.connection(s)
 
-	print myConnection.getMessage() #or add this to the GUI later on
-
+	print myConnection.getMessage()
 
 ### SHIZ TO SEND ###
-ball_status = []
-own_status = [] #contains own points too
+ball_s = [] # ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
+plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
 
 def send_shiz(clientMessage):
 	
-	# shizSendMsg = str(MY_ID) + clientMessage
-	if clientMessage == "NOTH":
-		pass
-	elif clientMessage == "MYID":
-		myConnection.sendMessage(clientMessage)
-	elif clientMessage == "PLYR":
-		myConnection.sendMessage( clientMessage + str(MY_ID) + '$PLYR$'.join(own_status) + "~ENDDATA~")
+	if clientMessage == "MYID":
+		myConnection.sendMessage( clientMessage )
 	elif clientMessage == "DONE":
-		myConnection.sendMessage(clientMessage)
-	# print "I SEND THE SHIT " + clientMessage
-	#myConnection.sendMessage(shizSendMsg)
-	# shizSendMsg = '$$SHIZ$$'.join( [ '$BALL$'.join(ball_status), '$PLYR$'.join(own_status) ] )
-
-
-### SHIZ TO RECV ###
-others_status = [] # contains others' points too
+		myConnection.sendMessage( clientMessage )
+	elif clientMessage == "STAT":
+		shizSendMsg = '$SHIZ$'.join( [ '$BALL$'.join(ball_s), '$PLYR$'.join(plyr_s) ] )
+		myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
 
 def recv_shiz():
 
@@ -137,52 +127,48 @@ def recv_shiz():
 		msg = myConnection.getMessage()
 		serverMessage = msg[:4]
 
-		# print "message from server : " + msg
-
-		if serverMessage == "NOTH":
-			pass
-		elif serverMessage == "MYID":
+		if serverMessage == "MYID":
 			return int(msg[4:])
-		elif serverMessage == "PLYR":
-			
+		elif serverMessage == "DONE":
+			return str(msg[4:])
+		elif serverMessage == "TIME":
+			pass
+		elif serverMessage == "STAT":
+
 			global players
-
-			# print "I received PLYR!"
-
-			# mergeCount = msg.count("~ENDDATA~")
 
 			msg = msg.split("~ENDDATA~")
 
-			for m in msg:
-				if len(m) > 1: #handle the empty part
-					# print m
+			try:
+				for m in msg:
+					# m has ball status and player status in it
+					print m
 					ID = int(m[4])
+
+					m = m[5:] # trim from m the serverMessage and ID
+					m = m.split("$SHIZ$") #separate ball status from player status
+
+					ball_r = m[0].split("$BALL$") #separate ball fields
+					plyr_r = m[1].split("$PLYR$") #separate player fields
+
+					#update the ball if my own copy of ball 
+					if ball_r[3] != players[MY_ID].color:
+						ball.set_heldBy( int(ball_r[0]) )
+						ball.set_pos( (int(ball_r[1]), int(ball_r[2]) ) )
+						ball.set_direction( ball_r[4] )
+						
+					#update the player
 					if ID != MY_ID:
-						player_stats = m[5:]
-						player_stats = player_stats.split("$PLYR$")
+						players[ID].uid = int(plyr_r[0])
+						players[ID].x = int(plyr_r[1])
+						players[ID].y = int(plyr_r[2])
+						players[ID].score = int(plyr_r[3])
+						players[ID].color = plyr_r[4]
+						players[ID].direction = plyr_r[5]
 						
-						# print player_stats
-						
-						players[ID].uid = int(player_stats[0])
-						players[ID].x = int(player_stats[1])
-						players[ID].y = int(player_stats[2])
-						players[ID].score = int(player_stats[3])
-						players[ID].color = player_stats[4]
-						players[ID].direction = player_stats[5]
 
-						# wew defeats the purpose of this whole shit
-						if ID == ball.heldBy:
-							ball.set_heldBy(int(player_stats[6]))
-
-			# this shit was from:
-			# own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, str(ball.heldBy)]
-		elif serverMessage == "TIME":
-			pass
-		elif serverMessage == "OKAY":
-			pass
-		elif serverMessage == "DONE":
-			return str(msg[4:])
-
+			except Exception as e:
+				print e
 
 
 
@@ -421,19 +407,21 @@ def game():
 	#################### GAME UPDATES #####################
 	def game_updates():
 		
-		global ball_status
-		global own_status
+		global ball_s
+		global plyr_s
 
 		#update ball position
 		ball.update_pos(BSPEED)
+
+		ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
 
 		#update paddle positions
 		for p in players:
 			p.update_pos(PSPEED)
 
 		#prepare own paddle status for sending + ball.heldBy shit
-		own_status = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, str(ball.heldBy)]
-		send_shiz("PLYR")
+		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+		send_shiz("STAT")
 		# own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
 
 	#######################################################

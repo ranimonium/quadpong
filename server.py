@@ -92,9 +92,6 @@ def getClients():
 			threads.append(thread)
 
 			clients[s].sendMessage("You have successfully joined the game")
-
-			# thread.start_new_thread(recv_shiz, (clients[s],))
-			# thread.start_new_thread(send_shiz, (clients[s],))
 			
 			print portnum
 			s+=1
@@ -107,79 +104,27 @@ def getClients():
 	for thread in threads:
 		thread.join()
 
-def send_shiz(client):
-	pass
-	# global players_Complete
-
-	# if players_Complete == "True":
-	# 	for c in clients:
-	# 		c.sendMessage(players_Complete)
-	# 	players_Complete = "done now, stop sending players_Complete"
-
-
-### SHIZ TO RECV ###
-others_status = [] # contains others' points too
-
+### function to receive messages from client and send appropriate responses/broadcast ###
 def recv_shiz(client):
 	while True:
 		msg = client.getMessage()
-		# print "I RECEIVED THE SHIT " + msg
 		
 		clientMessage = msg[:4]
 
-		if clientMessage == "NOTH":
-			pass
-		elif clientMessage == "MYID":
+		if clientMessage == "MYID":
 			client.sendMessage( clientMessage + str(clients.index(client)) )
-		elif clientMessage == "PLYR":
+		elif clientMessage == "DONE":
+			client.sendMessage( clientMessage + players_Complete )
+		elif clientMessage == "STAT":
 			# print msg
 			for c in clients:
 				c.sendMessage( msg )
-		elif clientMessage == "DONE":
-			# print clientMessage
-			client.sendMessage( clientMessage + players_Complete )
 
 
-
-
-
-def clientThread(client):
-	while True:
-		msg = client.getMessage()
-		print msg
-		for c in clients:
-			c.sendMessage(msg)
-		
-	
-
-
-#initialize game
-def beAGameServer():
-	getClients()
-	# for c in clients:
-	# 	thread.start_new_thread(clientThread, (c,))
-	while True:
-		# print "here"
-		j=1
-		
 try:
-	beAGameServer()
+	getClients()
+	while True:
+		pass
 except Exception as e:
 	print e
-finally:
 	sys.exit()
-
-
-"""
-#wait for actions an output each one
-while True:
-	for c in clients:
-		message = c.getMessage()
-		if message=="LEFT" or message=="UP":
-			print "up"
-			#tell game to move his paddle up/left
-		elif message=="RIGHT" or message=="DOWN":
-			print "down"
-			#tell game to move paddle right/down
-"""
-			

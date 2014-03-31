@@ -26,14 +26,14 @@ aka CS145 MP1
 * elements.py
  * contains the game elements
 * proto4p.py
- * TODO: NETWORKING STUFF !!!!!
- * TODO: AI if ever a player quits
  * TODO: setting username
+ * DONE: NETWORKING STUFF !!!!!
  * DONE: draw elements on arena
  * DONE: move players
  * DONE: move ball
  * DONE: scoring system
  * Nice-To-Have: powerups
+  * AI if ever a player quits, or lost connection error
   * ball multiply
   * lengthen/shorten paddles
 
@@ -61,9 +61,9 @@ aka CS145 MP1
  * the client messages are always in accompanied by the client's respective ID
  * the client always receives messages from the server
   * client messages:
-   * "nothin to do here"
-   * "ball position"
-   * "player settings"
+   * "MYID"
+   * "DONE"
+   * "STAT"
   * what the client does upon receipt of the server's messages 
    * "nothin to do here"
    * "ball position"
