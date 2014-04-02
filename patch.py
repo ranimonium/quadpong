@@ -8,9 +8,9 @@ import elements as e
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 800
-WINDOWHEIGHT = 600
-windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT + 100), 0, 32)
+WINDOWWIDTH = 640	
+WINDOWHEIGHT = 480
+windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT+50), 0, 32)
 pygame.display.set_caption('QuadPong')
 
 
@@ -33,7 +33,7 @@ NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
-pcolors = ['MEDIUMSPRINGGREEN', 'HOTPINK', 'GOLD', 'DODGERBLUE']
+pcolors = ['RED', 'GREEN', 'BLUE', 'YELLOW']
 pcoords = [
 		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP],					#player 0 top
 		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT)], 	#player 1 bottom
@@ -57,7 +57,7 @@ PSPEED = 2	#paddle speed
 
 ########## set up the ball ##########
 ballWIDTH, ballHEIGHT = 16, 16
-ball = e.Ball( 'HOTPINK', [250, 250])
+ball = e.Ball( 'RED', [250, 250])
 ball.set_direction('NE')
 ball.set_heldBy(0) #default, player 0 holds ball
 
@@ -76,11 +76,22 @@ borders = {
 	'bottomright_v':  [(arenaLEFT+arenaWIDTH, arenaTOP+arenaHEIGHT - arenaHEIGHT/borderdiv),(arenaLEFT+arenaWIDTH, arenaTOP + arenaHEIGHT)]
 }
 
+########## BLAH BLAH BLAH ##########
+
+# curScene = 'home'
+curScene = 'setPlayer'
+MY_ID = None
+myUsername = ""
+ball.set_heldBy(0)
+
+
+
 ################################################################
 
 ##################  NETWORKING CONFIGURATION  ##################
 
 DEFAULT_SERVER_IP="127.0.0.1"
+# DEFAULT_SERVER_IP="192.168.60.148"
 DEFAULT_SERVER_PORT=1234
 CONNECTION_REQUEST_MESSAGE="join game"
 BUFFER_SIZE=1024
@@ -108,7 +119,7 @@ def connectToServer():
 
 ### SHIZ TO SEND ###
 ball_s = [] # ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
-plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
 
 def send_shiz(clientMessage):
 	
@@ -165,7 +176,7 @@ def recv_shiz():
 						players[ID].score = int(plyr_r[3])
 						players[ID].color = plyr_r[4]
 						players[ID].direction = plyr_r[5]
-						
+						players[ID].username = plyr_r[6]
 
 			except Exception as e:
 				print e
@@ -177,13 +188,87 @@ def recv_shiz():
 ############ HOME SCREEN ############ 
 def home():
 	
-	title = 'QuadruPong'
-	fontObj = pygame.font.SysFont("None", 100)
+	def home_events():
+		
+		for event in pygame.event.get():
+			
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+			
+			elif event.type == KEYDOWN:
+				if event.key == K_ESCAPE:
+					pygame.event.post(pygame.event.Event(QUIT))	
+				elif event.key == K_SPACE:
+					global curScene
+					curScene = 'setPlayer'
+	
+	def draw_components():
+		
+		pass
 
-	msgSurfaceObj = fontObj.render(title, False, (0,0,255))
-	msgRectobj = msgSurfaceObj.get_rect()
-	msgRectobj.center = (WINDOWHEIGHT/2, WINDOWHEIGHT/2)
-	windowSurface.blit(msgSurfaceObj, msgRectobj)
+
+	draw_components()
+	home_events()
+
+
+############ GET NAME OF PLAYER ############ 
+def setPlayer():
+
+	def isAlphaNum(key):
+		
+		# key numeric
+		if 48 <= key and key <= 57:
+			return True
+		# key is letter
+		elif 97 <= key and key <= 122:
+			return True
+		else:
+			return False
+
+	def setPlayer_events():
+
+		global myUsername
+
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+
+			if event.type == KEYDOWN:
+				if event.key == K_ESCAPE:
+					pygame.event.post(pygame.event.Event(QUIT))	
+				elif event.key == K_BACKSPACE:
+					myUsername = myUsername[0:-1]
+				elif isAlphaNum(event.key) and len(myUsername) < 8:
+					myUsername += chr(event.key)
+					myUsername = myUsername.upper()
+				elif event.key == K_RETURN:
+					global curScene
+					#set up username later
+					curScene = 'wait'
+
+	def draw_components():
+
+		fontObj = pygame.font.Font("assets/pixel_maz.ttf", 72)
+
+		label = ' USERNAME: '
+		labelSurfaceObj = fontObj.render(label, False, e.COLOR['GREEN'])
+		labelRectobj = labelSurfaceObj.get_rect()
+		labelRectobj.midright = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		windowSurface.blit(labelSurfaceObj, labelRectobj)
+
+		name = " " + myUsername + "".join(['_' for i in range( 8-(len(myUsername)) )])
+		nameSurfaceObj = fontObj.render(name, False, e.COLOR['GREEN'])
+		nameRectObj = nameSurfaceObj.get_rect()
+		nameRectObj.midleft = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], nameRectObj, 0)
+		windowSurface.blit(nameSurfaceObj, nameRectObj)
+
+
+
+	setPlayer_events()
+	draw_components()
 
 ############ WAITING FOR OTHER PLAYERS TO CONNECT ############ 
 def wait():
@@ -303,8 +388,7 @@ def game():
 				sys.exit()
 			
 			elif event.type == KEYDOWN:
-			
-						
+							
 				if event.key == K_ESCAPE:
 					pygame.event.post(pygame.event.Event(QUIT))				
 				
@@ -337,9 +421,6 @@ def game():
 	
 	def draw_components():
 		
-		# paint background
-		windowSurface.fill(e.COLOR['DIMMESTGRAY'])
-		
 		# draw stage borders
 		pygame.draw.rect(windowSurface, e.COLOR['DIMGRAY'], [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
 		border_rects = []
@@ -351,10 +432,14 @@ def game():
 
 		# draw the paddles
 		paddle_rects = []
-		for i in range(2): #top bottom
-			paddle_rects.append(pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleHEIGHT, players[i].y), paddleWIDTH))
-		for i in range(2,4): #left right
-			paddle_rects.append(pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT))
+		for i in range(4):
+			paddle_rect = None
+			if i in range(2): #top bottom
+				paddle_rect = pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleHEIGHT, players[i].y), paddleWIDTH)
+			if i in range(2,4): #left right
+				paddle_rect = pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT)
+			windowSurface.blit(pygame.image.load("assets/paddle_"+players[i].allowDir[0]+players[i].allowDir[1]+"_"+players[i].color+".png"), paddle_rect)
+			paddle_rects.append(paddle_rect)
 
 
 		# draw the ball
@@ -369,7 +454,7 @@ def game():
 		if ball.heldBy != -1:
 			ball.set_color(players[ball.heldBy].color)
 		ball_rect = pygame.draw.circle(windowSurface, ball.get_colorValue(), (ball.x, ball.y), ballWIDTH/2)
-
+		windowSurface.blit(pygame.image.load("assets/ball_"+ball.color+".png"), ball_rect)
 		rects = [ball_rect, paddle_rects, border_rects] 
 
 		#draw scoreboard
@@ -420,7 +505,7 @@ def game():
 			p.update_pos(PSPEED)
 
 		#prepare own paddle status for sending + ball.heldBy shit
-		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction]
+		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
 		send_shiz("STAT")
 		# own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
 
@@ -450,13 +535,14 @@ def over():
 	pass
 
 
-curScene = 'wait'
-MY_ID = None
-ball.set_heldBy(0)
+
 
 #main application loop tralalalala
 while True:
 	
+	# paint background
+	windowSurface.fill(e.COLOR['DIMMESTGRAY'])
+
 	if curScene == 'home':
 		home()
 	elif curScene == 'wait':
