@@ -8,8 +8,8 @@ import elements as e
 pygame.init()
 
 # set up the window
-WINDOWWIDTH = 640	
-WINDOWHEIGHT = 480
+WINDOWWIDTH = 800	
+WINDOWHEIGHT = 500
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT+50), 0, 32)
 pygame.display.set_caption('QuadPong')
 
@@ -19,7 +19,7 @@ pygame.display.set_caption('QuadPong')
 ########## set up timer ##########
 clock = pygame.time.Clock()
 # start_time = 
-frame_fate = 600 #Frames Per Second
+frame_rate = 600 #Frames Per Second
 
 ########## set up arena's "dimensions" ##########
 arenaTOP = WINDOWHEIGHT/10
@@ -78,8 +78,8 @@ borders = {
 
 ########## BLAH BLAH BLAH ##########
 
-# curScene = 'home'
-curScene = 'setPlayer'
+curScene = 'wait'
+# curScene = 'setPlayer'
 MY_ID = None
 myUsername = ""
 ball.set_heldBy(0)
@@ -178,7 +178,7 @@ def recv_shiz():
 						players[ID].direction = plyr_r[5]
 						players[ID].username = plyr_r[6]
 
-			except Exception as e:
+			except Exception as exc:
 				print e
 
 
@@ -201,12 +201,28 @@ def home():
 					pygame.event.post(pygame.event.Event(QUIT))	
 				elif event.key == K_SPACE:
 					global curScene
+					global frame_rate
+					frame_rate = 600
 					curScene = 'setPlayer'
+					windowSurface.fill(e.COLOR['DIMMESTGRAY'])
+					pygame.display.update()
+					time.sleep(0.25)
 	
 	def draw_components():
 		
-		pass
-
+		#draw title
+		title_image = pygame.image.load("assets/title_"+ random.choice(pcolors) +".png")
+		title_rect = title_image.get_rect()
+		title_rect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], title_rect)
+		windowSurface.blit(title_image, title_rect)
+		
+		#draw press key thingy
+		press_image = pygame.image.load("assets/press_"+ random.choice(pcolors) +".png")
+		press_rect = press_image.get_rect()
+		press_rect.center = (WINDOWWIDTH/2, WINDOWHEIGHT - WINDOWHEIGHT/6)
+		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], title_rect)
+		windowSurface.blit(press_image, press_rect)
 
 	draw_components()
 	home_events()
@@ -245,8 +261,11 @@ def setPlayer():
 					myUsername = myUsername.upper()
 				elif event.key == K_RETURN:
 					global curScene
-					#set up username later
 					curScene = 'wait'
+					#set up username later
+					windowSurface.fill(e.COLOR['DIMMESTGRAY'])
+					pygame.display.update()
+					time.sleep(0.25)
 
 	def draw_components():
 
@@ -265,10 +284,8 @@ def setPlayer():
 		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], nameRectObj, 0)
 		windowSurface.blit(nameSurfaceObj, nameRectObj)
 
-
-
-	setPlayer_events()
 	draw_components()
+	setPlayer_events()
 
 ############ WAITING FOR OTHER PLAYERS TO CONNECT ############ 
 def wait():
@@ -276,18 +293,40 @@ def wait():
 	global curScene
 	global MY_ID
 
+	def write_text(text, color, position):
+		fontObj = pygame.font.Font("assets/pixel_maz.ttf", 60)
+
+		textSurfaceObj = fontObj.render(text, False, e.COLOR[color])
+		textRectobj = textSurfaceObj.get_rect()
+		textRectobj.topleft = position
+		windowSurface.blit(textSurfaceObj, textRectobj)
+		
+		pygame.display.update()
+
 	# connect to server
-	if MY_ID == None:
-		connectToServer()
+	while MY_ID == None:
+		print "Connecting to server..."
+		write_text( "CONNECTING TO SERVER...", "GREEN", (50, 50) )
+		try:
+			connectToServer()
+		except KeyboardInterrupt:
+			print exc
 		send_shiz("MYID")
 		MY_ID = recv_shiz()
-	print MY_ID
+	
+	print "Connected! Your ID: " + str(MY_ID)
+	# write_text( "CONNECTED!", "GREEN", (50, 50) )
+	# write_text( "HI, " + players[MY_ID].username + "!", players[MY_ID].username, (50, 50 + 70) )
+	# write_text( "THIS WILL BE THE COLOR OF YOUR PADDLE.",  players[MY_ID].username, (50, 50 + 70 + 70) )
 
+	print "Waiting for other players to connect..."
+	# write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  players[MY_ID].username, (50, 50 + 70 + 70) )
+	print "rawr"
 	while True:
 		send_shiz("DONE")
 		isDone = recv_shiz()
 		if isDone == "True":
-			print isDone
+			print "isDone: " + isDone
 			curScene = 'game'
 			thread.start_new_thread(recv_shiz, ())
 			break
@@ -436,9 +475,9 @@ def game():
 			paddle_rect = None
 			if i in range(2): #top bottom
 				paddle_rect = pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleHEIGHT, players[i].y), paddleWIDTH)
-			if i in range(2,4): #left right
+			elif i in range(2,4): #left right
 				paddle_rect = pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT)
-			windowSurface.blit(pygame.image.load("assets/paddle_"+players[i].allowDir[0]+players[i].allowDir[1]+"_"+players[i].color+".png"), paddle_rect)
+			# windowSurface.blit(pygame.image.load("assets/paddle_"+players[i].allowDir[0]+players[i].allowDir[1]+"_"+players[i].color+".png"), paddle_rect)
 			paddle_rects.append(paddle_rect)
 
 
@@ -537,23 +576,28 @@ def over():
 
 
 
-#main application loop tralalalala
-while True:
-	
-	# paint background
-	windowSurface.fill(e.COLOR['DIMMESTGRAY'])
+try:
+	#main application loop tralalalala
+	while True:
+		
+		# paint background
+		windowSurface.fill(e.COLOR['DIMMESTGRAY'])
 
-	if curScene == 'home':
-		home()
-	elif curScene == 'wait':
-		wait()
-	elif curScene == 'setPlayer':
-		setPlayer()
-	elif curScene == 'game':
-		game()
-	elif curScene == 'over':
-		over()
+		if curScene == 'home':
+			home()
+		elif curScene == 'setPlayer':
+			setPlayer()
+		elif curScene == 'wait':
+			wait()
+		elif curScene == 'game':
+			game()
+		elif curScene == 'over':
+			over()
 
-	pygame.display.update()
-	clock.tick(frame_fate)
-	# time.sleep(0.1)
+		pygame.display.update()
+		clock.tick(frame_rate)
+		# time.sleep(0.1)
+except KeyboardInterrupt:
+	sys.exit()
+except Exception as exc:
+	print exc
