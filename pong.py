@@ -1,174 +1,16 @@
-import pygame, sys, time, random, thread, connection, socket
+import pygame, sys, time, random, thread
 from pygame.locals import *
-import elements as e
-from socket import *
+from netconfig import *
 
 ####################  PYGAME CONFIGURATION  ####################
 
 # set up pygame 
 pygame.init()
 
-# set up the window
-WINDOWWIDTH = 800	
-WINDOWHEIGHT = 500
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT+50), 0, 32)
 pygame.display.set_caption('QuadPong')
 
-
-#####################  GAME CONFIGURATION  #####################
-
-########## set up timer ##########
 clock = pygame.time.Clock()
-# start_time = 
-frame_rate = 600 #Frames Per Second
-
-########## set up arena's "dimensions" ##########
-arenaTOP = WINDOWHEIGHT/10
-arenaLEFT = WINDOWWIDTH/10
-arenaWIDTH = WINDOWWIDTH - arenaLEFT*2
-arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
-
-########## set up players ##########
-
-NUM_PLAYERS = 4
-
-paddleWIDTH, paddleHEIGHT = 14, 100
-
-pcolors = ['RED', 'GREEN', 'BLUE', 'YELLOW']
-pcoords = [
-		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP - paddleWIDTH/2],					#player 0 top
-		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT) - paddleWIDTH/2 ], 	#player 1 bottom
-		[arenaLEFT - 5, WINDOWHEIGHT/2 - paddleHEIGHT/2], 								#player 2 left
-		[(arenaLEFT + arenaWIDTH) - paddleWIDTH/2, WINDOWHEIGHT/2 - paddleHEIGHT/2],	#player 3 right
-	]
-
-# instantiate Player class from elements module
-players = [e.Player(i, pcolors[i], pcoords[i]) for i in range(NUM_PLAYERS)]
-
-# set Player direction to be NONE (meaning they're not moving yet)
-for p in players:
-	if players.index(p) < 2:
-		p.set_allowableDirection( ('W', 'E') )
-	else:
-		p.set_allowableDirection( ('N', 'S') )
-	p.set_direction('NONE')
-
-PSPEED = 2	#paddle speed
-
-
-########## set up the ball ##########
-ballWIDTH, ballHEIGHT = 16, 16
-ball = e.Ball( 'RED', [250, 250])
-ball.set_direction('NE')
-ball.set_heldBy(0) #default, player 0 holds ball
-
-BSPEED = 2	#ball speed
-
-########## border coordinates and border lengths ##########
-borderdiv = 6
-borders = {
-	'topleft_h': [(arenaLEFT, arenaTOP),(arenaLEFT + arenaWIDTH/borderdiv, arenaTOP)],
-	'topright_h': [(arenaLEFT + arenaWIDTH - arenaWIDTH/borderdiv, arenaTOP),(arenaLEFT + arenaWIDTH, arenaTOP)],
-	'bottomleft_h':  [(arenaLEFT, arenaTOP+arenaHEIGHT),(arenaLEFT + arenaWIDTH/borderdiv, arenaTOP + arenaHEIGHT)],
-	'bottomright_h':  [(arenaLEFT + arenaWIDTH - arenaWIDTH/borderdiv, arenaTOP+arenaHEIGHT),(arenaLEFT + arenaWIDTH, arenaTOP + arenaHEIGHT)],
-	'topleft_v': [(arenaLEFT, arenaTOP),(arenaLEFT, arenaTOP + arenaHEIGHT/borderdiv)],
-	'topright_v':  [(arenaLEFT+arenaWIDTH, arenaTOP),(arenaLEFT+arenaWIDTH, arenaTOP + arenaHEIGHT/borderdiv)],
-	'bottomleft_v':  [(arenaLEFT, arenaTOP+arenaHEIGHT - arenaHEIGHT/borderdiv),(arenaLEFT, arenaTOP + arenaHEIGHT)],
-	'bottomright_v':  [(arenaLEFT+arenaWIDTH, arenaTOP+arenaHEIGHT - arenaHEIGHT/borderdiv),(arenaLEFT+arenaWIDTH, arenaTOP + arenaHEIGHT)]
-}
-
-########## BLAH BLAH BLAH ##########
-
-curScene = 'wait'
-# curScene = 'setPlayer'
-MY_ID = None
-myUsername = ""
-ball.set_heldBy(0)
-
-
-
-################################################################
-
-##################  NETWORKING CONFIGURATION  ##################
-
-serverName = "127.0.0.1"
-serverPort = 12000
-
-clientSocket = socket(AF_INET, SOCK_DGRAM)
-
-BUFFER_SIZE=2048
-
-### SHIZ TO SEND ###
-ball_s = [] # ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
-plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
-
-def send_shiz(clientMessage):
-	
-	if clientMessage == "JOIN":
-		clientSocket.sendto(clientMessage, (serverName, serverPort))
-	elif clientMessage == "DONE":
-		clientSocket.sendto(clientMessage, (serverName, serverPort))
-	elif clientMessage == "STAT":
-		shizSendMsg = clientMessage + str(MY_ID) + '$SHIZ$'.join( [ '$BALL$'.join(ball_s), '$PLYR$'.join(plyr_s) ] ) + "~ENDDATA~"
-		clientSocket.sendto(shizSendMsg, (serverName, serverPort))
-		# myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
-
-def recv_shiz():
-
-	while True:
-
-		msg, serverAddress = clientSocket.recvfrom(BUFFER_SIZE)
-		serverMessage = msg[:4]
-
-		# print msg
-
-		if serverMessage == "JOIN":
-			return int(msg[4:])
-		elif serverMessage == "DONE":
-			return int(msg[4:])
-		elif serverMessage == "TIME":
-			pass
-		elif serverMessage == "STAT":
-
-			global players
-
-			msg = msg.split("~ENDDATA~")
-
-			try:
-				for m in msg:
-					# m has ball status and player status in it
-					print m
-					ID = int(m[4])
-
-					m = m[5:] # trim from m the serverMessage and ID
-					m = m.split("$SHIZ$") #separate ball status from player status
-
-					ball_r = m[0].split("$BALL$") #separate ball fields
-					plyr_r = m[1].split("$PLYR$") #separate player fields
-
-					#update the ball if my own copy of ball 
-					if ball_r[3] != players[MY_ID].color:
-						ball.set_heldBy( int(ball_r[0]) )
-						ball.set_pos( (int(ball_r[1]), int(ball_r[2]) ) )
-						ball.set_color( ball_r[3] )
-						ball.set_direction( ball_r[4] )
-						
-					#update the player
-					if ID != MY_ID:
-						players[ID].uid = int(plyr_r[0])
-						players[ID].x = int(plyr_r[1])
-						players[ID].y = int(plyr_r[2])
-						players[ID].score = int(plyr_r[3])
-						players[ID].color = plyr_r[4]
-						players[ID].direction = plyr_r[5]
-						players[ID].username = plyr_r[6]
-
-			except Exception as exc:
-				print e
-
-
-
-################################################################
 
 ############ HOME SCREEN ############ 
 def home():
@@ -196,14 +38,14 @@ def home():
 	def draw_components():
 		
 		#draw title
-		title_image = pygame.image.load("assets/title_"+ random.choice(pcolors) +".png")
+		title_image = pygame.image.load("assets/images/title_"+ random.choice(pcolors) +".png")
 		title_rect = title_image.get_rect()
 		title_rect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], title_rect)
 		windowSurface.blit(title_image, title_rect)
 		
 		#draw press key thingy
-		press_image = pygame.image.load("assets/press_"+ random.choice(pcolors) +".png")
+		press_image = pygame.image.load("assets/images/press_"+ random.choice(pcolors) +".png")
 		press_rect = press_image.get_rect()
 		press_rect.center = (WINDOWWIDTH/2, WINDOWHEIGHT - WINDOWHEIGHT/6)
 		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], title_rect)
@@ -254,7 +96,7 @@ def setPlayer():
 
 	def draw_components():
 
-		fontObj = pygame.font.Font("assets/pixel_maz.ttf", 72)
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 72)
 
 		label = ' USERNAME: '
 		labelSurfaceObj = fontObj.render(label, False, e.COLOR['GREEN'])
@@ -279,7 +121,7 @@ def wait():
 	global MY_ID
 
 	def write_text(text, color, position):
-		fontObj = pygame.font.Font("assets/pixel_maz.ttf", 60)
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 60)
 
 		textSurfaceObj = fontObj.render(text, False, e.COLOR[color])
 		textRectobj = textSurfaceObj.get_rect()
@@ -291,11 +133,30 @@ def wait():
 
 	write_text("Connecting to server...", "GREEN", (50, 50))
 
+	def wait_events():
+		while curScene == 'wait':
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					print "send pout mwah"
+					pygame.quit()
+					send_shiz("POUT", MY_ID)
+
+			
+				elif event.type == KEYDOWN and event.key == K_ESCAPE:
+					pygame.event.post(pygame.event.Event(QUIT))	
+
+
+	thread.start_new_thread(wait_events, ())
+
+
 	# connect to server
 	while MY_ID == None:
 		print "Connecting to server..."
 		send_shiz("JOIN")
 		MY_ID = recv_shiz()
+
+		players_AI.remove(MY_ID)
+
 		if MY_ID == -1:
 			print "Sorry, slots full for now.  Try again later."
 			global curScene
@@ -312,17 +173,17 @@ def wait():
 	print "Waiting for other players to connect..."
 	write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  players[MY_ID].color, (50, 50 + 70*4) )
 
-	print "rawr"
+	# print "rawr"
 	while True:
 		send_shiz("DONE")
 		num_connectedPlayers = recv_shiz()
-		if num_connectedPlayers == 4:
+		if num_connectedPlayers == NUM_PLAYERS:
 			print "num_connectedPlayers: " + str(num_connectedPlayers)
 			curScene = 'game'
 			thread.start_new_thread(recv_shiz, ())
 			global frame_rate
 			frame_rate = 600
-			time.sleep(3)
+			# time.sleep(3)
 			break
 
 
@@ -414,15 +275,27 @@ def game():
 	##################### GAME EVENTS #####################
 	def game_events():
 	
+
+		for ai in players_AI:
+			if players[ai].ball_onTerr(ball, WINDOWHEIGHT, WINDOWWIDTH):
+				players[ai].move_AI(ball)
+
+		if ball.heldBy in players_AI:
+			ball.set_heldBy(-1)
+
+
+
 		for event in pygame.event.get():
 			
 			if event.type == QUIT:
+				clientSocket.close()
 				pygame.quit()
 				sys.exit()
 			
 			elif event.type == KEYDOWN:
 							
 				if event.key == K_ESCAPE:
+					clientSocket.close()
 					pygame.event.post(pygame.event.Event(QUIT))				
 				
 				elif event.key == K_SPACE and ball.heldBy == MY_ID:
@@ -473,7 +346,7 @@ def game():
 			elif i in range(2,4): #left right
 				paddle_rect = pygame.Rect(players[i].x, players[i].y, paddleWIDTH ,paddleHEIGHT)
 				# paddle_rect = pygame.draw.line(windowSurface, players[i].get_colorValue(), (players[i].x, players[i].y), (players[i].x + paddleWIDTH, players[i].y), paddleHEIGHT)
-			windowSurface.blit(pygame.image.load("assets/paddle_"+players[i].allowDir[0]+players[i].allowDir[1]+"_"+players[i].color+".png"), paddle_rect)
+			windowSurface.blit(pygame.image.load("assets/images/paddle_"+players[i].allowDir[0]+players[i].allowDir[1]+"_"+players[i].color+".png"), paddle_rect)
 			paddle_rects.append(paddle_rect)
 
 
@@ -491,11 +364,11 @@ def game():
 		# ball_rect = pygame.draw.circle(windowSurface, ball.get_colorValue(), (ball.x, ball.y), ballWIDTH/2)
 		ball_rect = pygame.Rect((ball.x, ball.y), (ballWIDTH, ballHEIGHT))
 		ball_rect.center = (ball.x, ball.y)
-		windowSurface.blit(pygame.image.load("assets/ball_"+ball.color+".png"), ball_rect)
+		windowSurface.blit(pygame.image.load("assets/images/ball_"+ball.color+".png"), ball_rect)
 		rects = [ball_rect, paddle_rects, border_rects] 
 
 		#draw scoreboard
-		fontObj = pygame.font.Font("assets/pixel_maz.ttf", 60)
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 60)
 
 		pscore_coord = [
 			((arenaLEFT+arenaWIDTH)/4 -50, WINDOWHEIGHT-20),
@@ -521,16 +394,19 @@ def game():
 		global plyr_s
 
 		#update ball position
-		if ball.color == players[MY_ID].color:
-			ball.update_pos(BSPEED)
+		# if ball.color == players[MY_ID].color:
+		ball.update_pos(BSPEED)
 
 		ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
+
 
 		#update paddle positions
 		# for p in players:
 		# 	p.update_pos(PSPEED)
 		players[MY_ID].update_pos(PSPEED)
-
+		
+		for ai in players_AI:
+			players[ai].update_pos(PSPEED)
 		#prepare own paddle status for sending + ball.heldBy shit
 		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
 		send_shiz("STAT")
@@ -539,7 +415,7 @@ def game():
 	#######################################################
 
 	###################### GAME FLOW ######################
-	
+
 	rects = draw_components()
 	ball_rect, paddle_rects, border_rects = rects[0], rects[1], rects[2]
 	
@@ -559,7 +435,39 @@ def game():
 
 ############ GAME END SCENE ############ 
 def over():
-	pass
+	
+	def draw_components():
+		# ---- draw GAME OVER here ----
+
+
+
+		# ---- draw scores ----
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 60)
+		
+		pname_coord = [
+				(arenaLEFT + 50, arenaTOP + 100 + 60*0),
+				(arenaLEFT + 50, arenaTOP + 100 + 60*1),
+				(arenaLEFT + 50, arenaTOP + 100 + 60*2),
+				(arenaLEFT + 50, arenaTOP + 100 + 60*3)
+			]
+
+		pscore_coord = [
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*0),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*1),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*2),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*3)
+			]
+
+		for p in players:
+			msgSurfaceObj = fontObj.render(str(p.username), False, p.get_colorValue())
+			msgRectobj = msgSurfaceObj.get_rect()
+			msgRectobj.topleft = pname_coord[players.index(p)]
+			windowSurface.blit(msgSurfaceObj, msgRectobj)
+
+			msgSurfaceObj = fontObj.render(str(p.score), False, p.get_colorValue())
+			msgRectobj = msgSurfaceObj.get_rect()
+			msgRectobj.topleft = pscore_coord[players.index(p)]
+			windowSurface.blit(msgSurfaceObj, msgRectobj)
 
 
 
@@ -584,7 +492,10 @@ try:
 
 		pygame.display.update()
 		clock.tick(frame_rate)
-		# time.sleep(0.1)
+
+except error, msg:
+	print msg
+	sys.exit()
 except KeyboardInterrupt:
 	sys.exit()
 except Exception as exc:

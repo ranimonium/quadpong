@@ -106,7 +106,6 @@ class Sprite:
 		curDir = self.get_directionValue()
 		self.set_pos( (self.x + speed*curDir[0], self.y + speed*curDir[1]) )
 
-
 class Ball(Sprite):
 	
 	def bounce(self, to):
@@ -121,11 +120,41 @@ class Player(Sprite):
 		Sprite.__init__(self, color, pos)
 		self.uid = uid
 		self.score = 0
+		self.ai = False
 		self.username = "PLAYER " + str(self.uid + 1)
 
 	def add_score(self):
-		self.score += 1 
+		self.score += 1
 
 	def set_username(self, username):
 		if username != "":
 			self.username = username
+
+	def on_AI(self):
+		self.ai = True
+
+	def move_AI(self, ball):
+
+		if self.allowDir == ('W', 'E'):
+			if ball.x > self.x:
+				self.set_direction('E')
+			elif ball.x < self.x:
+				self.set_direction('W')
+		elif self.allowDir == ('N', 'S'):
+			if ball.y > self.y:
+				self.set_direction('S')
+			elif ball.y < self.y:
+				self.set_direction('N')
+	
+	def ball_onTerr(self, ball, terr_HEIGHT, terr_WIDTH):
+
+		if self.uid == 0 and ball.y < terr_HEIGHT/2: # top
+			return True
+		elif self.uid == 1 and ball.y > terr_HEIGHT/2: # bottom
+			return True
+		elif self.uid == 2 and ball.x < terr_WIDTH/3: # left
+			return True
+		elif self.uid == 3 and ball.x > 2*terr_WIDTH/3: # right
+			return True
+		else:
+			return False

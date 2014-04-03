@@ -6,7 +6,7 @@
 	
 """
 
-NUMBER_OF_PLAYERS = 4
+NUM_PLAYERS = 2
 BUFFER_SIZE = 2048
 
 import socket
@@ -19,8 +19,10 @@ serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverSocket.bind(('', serverPort))
 
-
 client_addresses = []
+
+#contains available indices for client_address
+available_IDs = [i for i in range(NUM_PLAYERS)]
 
 ### function to receive messages from client and send appropriate responses/broadcast ###
 def recvMsg():
@@ -32,21 +34,30 @@ def recvMsg():
 		header = msg[:4]
 
 		if header == "JOIN": #sends ID too
-			if len(client_addresses) < NUMBER_OF_PLAYERS:
-				client_addresses.append(clientAddress)
+			if len(client_addresses) < NUM_PLAYERS:
+				client_addresses.insert(available_IDs.pop(0), clientAddress)
 				serverSocket.sendto(header + str(client_addresses.index(clientAddress)), clientAddress)
 				print str(clientAddress) + " has connected!"
-				print str(NUMBER_OF_PLAYERS - len(client_addresses)) + " more player(s) to go."
+				print str(NUM_PLAYERS - len(client_addresses)) + " more player(s) to go."
 			else:
 				serverSocket.sendto(header + str(-1), clientAddress)
 		elif header == "DONE":
 			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
 		elif header == "STAT":
-			# print msg
-			for i in range(len(client_addresses)):
-				print str(i) + " " + str(client_addresses[i])
 			for c in client_addresses:
 				serverSocket.sendto( msg, c )
+		elif header == "POUT": #player quits
+			
+			print msg
+			ID = int(msg[4])
+
+			#player quits upon wait
+			if len(client_addresses) < NUM_PLAYERS:
+				available_IDs.append( ID )
+				client_addresses.remove(clientAddress)
+				serverSocket.sendto(header + "KBYE", clientAddress)
+			#already in game
+			# else:
 
 try:
 	recvMsgThread = threading.Thread(target=recvMsg, args=())
