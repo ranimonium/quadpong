@@ -1,7 +1,7 @@
-CS145 PS 2-3
+QUADPONG
 ========
 
-aka CS145 MP1
+CS145MP.
 
 
 #### Specifications ####
@@ -25,89 +25,52 @@ aka CS145 MP1
 ### Files ###
 * elements.py
  * contains the game elements
-* proto4p.py
- * TODO: setting username
- * DONE: NETWORKING STUFF !!!!!
- * DONE: draw elements on arena
- * DONE: move players
- * DONE: move ball
- * DONE: scoring system
- * Nice-To-Have: powerups
-  * AI if ever a player quits, or lost connection error
-  * ball multiply
-  * lengthen/shorten paddles
+* server.py
+ * accepts clients (running pong.py)
+ * serves as the channel for clients' exchange of information
+* pong.py
+ * the client program
+ * this is what the users should run
 
-## NETWORKING ##
-* connect four clients to server
-* each client must be notified about the connection of every other client
+### DEPENDENCIES ###
+* The machines to run the programs here must have:  
+ * Python 2.7.3
+ * Pygame
 
-### APPLICATION LAYER PROTOCOL ###
-* MESSAGE FORMAT
- * strings
- * client and server knows which is which
-* INITIATE CONNECTION
- * server waits for 4 clients to connect
- * upon connection, client requests server to give him an ID
- * the client's ID is actually its index in the clients list of the server
- * server stores client's initial settings (including username)
- * a message (ready/not ready) is constantly sent to the connected clients
- * once ready, the game starts
- * if we have AI, we have timer
-  * once the first client connects, timer starts 
-  * timer:  2 mins.  if no one else connects, assume AI and start game
- * else if we have no AI, then we'd wait forever until there're 4 players
-* DURING THE GAME
- * there is constant communication between the clients and the server
- * the client messages are always in accompanied by the client's respective ID
- * the client always receives messages from the server
-  * client messages:
-   * "MYID"
-   * "DONE"
-   * "STAT"
-  * what the client does upon receipt of the server's messages 
-   * "nothin to do here"
-   * "ball position"
-   * "player settings"
-   * "timer"
- * the server always receives the messages from the client
-  * what the server does upon receipt of client messages:
-   * "nothin to do here"
-    * pass
-   * "ball position"
-    * stores it in the list of ball positions according to client's ID
-    * the ID would serve as the index
-    * resolves conflict by comparing the values of all ball status from the client
-    * the different one would be the real value to be distributed
-   * "player settings"
-    * stores player settings
-    * sends these settings each client
-   * "timer"
-  * server messages:
-   * "nothin to do here"
-   * "ball position"
-   * "player settings"
-   * "timer"
+### HOW TO RUN ###
+* SERVER: run "python server.py"
+* CLIENT: run "python pong.py"
 
-What the APPLICATION LAYER PROTOCOL is responsible for:
-The types of messages exchanged, for example, request messages and response
-messages
+### PROTOCOL REQUIREMENTS ###
+* [DONE] A connected user must have an identifier. Users that are connected to the same host must have  distinct identifiers.
+* [DONE] A connected user must have the option to provide an alias/username. Users that are connected to the same host may have the same alias/username.
+* [DONE] A connected user must be able to receive messages from other users that are connected on the same host.
+* [DONE] A user must be able to send messages to all users, or to selected users.
+* [TODO] Aside from aliases and messages, a user must also have the option to share other kinds of information (e.g. status messages).
+* [TODO] A user must have the option to voluntarily disconnect.
+* [TODO] A user must be notified when another user disconnects.
 
-The syntax of the various message types, such as the fields in the message and
-how the fields are delineated
+### What the APPLICATION LAYER PROTOCOL is responsible for: ###
+* The types of messages exchanged, for example, request messages and response messages
+* The syntax of the various message types, such as the fields in the message and how the fields are delineated
+* The semantics of the fields, that is, the meaning of the information in the fields
+* Rules for determining when and how a process sends messages and responds to messages
 
-The semantics of the fields, that is, the meaning of the information in the fields
 
-Rules for determining when and how a process sends messages and responds to
-messages
-
-• A connected user must have an identifier. Users that are connected to the same host must have 
-distinct identifiers.
-• A connected user must have the option to provide an alias/username. Users that are connected to
-the same host may have the same alias/username.
-• A connected user must be able to receive messages from other users that are connected on the 
-same host.
-• A user must be able to send messages to all users, or to selected users.
-• Aside from aliases and messages, a user must also have the option to share other kinds of 
-information (e.g. status messages).
-• A user must have the option to voluntarily disconnect.
-• A user must be notified when another user disconnects.
+### APPLICATION LAYER PROTOCOL: QUADPONG ###
+* SYNTAX
+ * {header}{message}
+ * {header}{ID}{message}
+* SEMANTICS
+ * headers:
+  * "JOIN" : client connects to server, server assigns it ID
+  * "DONE" : notification to the clients that they can now play
+  * "STAT" : "status"; the header when sending messages essential to the game itself
+ * messages:
+  * information on the player's paddle 
+  * information on the player's influence on the ball
+* RULES
+  * The fields are joined into a single string 
+  * This single string is sent to the server
+  * The server sends to every other player the information received from one player
+  * The client splits back the fields and uses it to update its copy of the game
