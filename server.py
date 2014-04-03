@@ -5,126 +5,55 @@
 	+ takes action from client, puts it in the game as a function, and returns to all the clients the new coordinates per object
 	
 """
-NUMBER_OF_PLAYERS=4
-DEFAULT_PORT=1234
-BUFFER_SIZE=1024
+
+NUMBER_OF_PLAYERS = 4
+BUFFER_SIZE = 2048
 
 import socket
-import connection
-import threading
+from socket import *
 import sys
-# import thread
+import threading
+
+serverPort = 12000
+serverSocket = socket(AF_INET, SOCK_DGRAM)
+serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+serverSocket.bind(('', serverPort))
 
 
-TCP_IP = '0.0.0.0'
-
-clients=[]
-threads = []
-
-# player_stats=[]
-ball_stats = []
-
-players_Complete = "False"
-
-#wait for clients to join
-"""
-	Wait for players to join by
-		initiating UDP socket where client connection requests come in
-		initiating 4 sockets with consecutive port numbers
-		Until we have 4 clients:
-			[Listen with the UDP socket
-			Send next specific port number to next request] thread?
-			Wait for request from client to specific port
-			Accept request
-			Make a connection with the socket
-			Add the connection to the clients list
-	
-"""
-def getClients():
-	global clients
-	global players_Complete
-	# global player_stats
-
-	sockets=[0 for i in xrange(0,NUMBER_OF_PLAYERS)]
-	
-	#initiate UDP socket where connection requests from clients come in
-	udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	#udpsocket=socket.socket()
-	udpsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	udpsocket.bind(('', DEFAULT_PORT))
-	
-	"""
-	portnum=2001
-	#initiate client-specific sockets/connections
-	for s in xrange(0,4):
-		sockets[s]=(socket.socket())
-		sockets[s].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		sockets[s].bind((TCP_IP, portnum))
-		portnum+=1
-	"""
-	
-	#wait for connecion requests, send specific port number to each UDP-accepted request
-	#turn into threads eventually
-	s=0
-	portnum=2001
-
-	print "Waiting..."
-
-	while len(clients)<NUMBER_OF_PLAYERS:
-		#udpsocket.listen(5)
-		data, addr = udpsocket.recvfrom(BUFFER_SIZE)
-		if data=="join game":
-			print addr[0], "wants to join game"
-			udpsocket.sendto(str(portnum), addr)
-		
-			sockets[s]=(socket.socket())
-			sockets[s].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			sockets[s].bind((TCP_IP, portnum))
-			
-			sockets[s].listen(1)
-			remote_socket, addr = sockets[s].accept()
-			
-			clients.append(connection.connection(remote_socket))
-			
-			# threading shiz
-			thread = threading.Thread(target=recv_shiz,args=(clients[s],))
-			thread.start()
-			threads.append(thread)
-
-			clients[s].sendMessage("You have successfully joined the game")
-			
-			print portnum
-			s+=1
-			portnum+=1
-
-	#getting clients complete
-	players_Complete = "True"
-
-	#joining the threads
-	for thread in threads:
-		thread.join()
+client_addresses = []
 
 ### function to receive messages from client and send appropriate responses/broadcast ###
-def recv_shiz(client):
+def recvMsg():
+	
 	while True:
-		msg = client.getMessage()
+
+		msg, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
 		
-		clientMessage = msg[:4]
+		header = msg[:4]
 
-		if clientMessage == "MYID":
-			client.sendMessage( clientMessage + str(clients.index(client)) )
-		elif clientMessage == "DONE":
-			client.sendMessage( clientMessage + players_Complete )
-		elif clientMessage == "STAT":
+		if header == "JOIN": #sends ID too
+			if len(client_addresses) < NUMBER_OF_PLAYERS:
+				client_addresses.append(clientAddress)
+				serverSocket.sendto(header + str(client_addresses.index(clientAddress)), clientAddress)
+				print str(clientAddress) + " has connected!"
+				print str(NUMBER_OF_PLAYERS - len(client_addresses)) + " more player(s) to go."
+			else:
+				serverSocket.sendto(header + str(-1), clientAddress)
+		elif header == "DONE":
+			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
+		elif header == "STAT":
 			# print msg
-			for c in clients:
-				c.sendMessage( msg )
-
+			for i in range(len(client_addresses)):
+				print str(i) + " " + str(client_addresses[i])
+			for c in client_addresses:
+				serverSocket.sendto( msg, c )
 
 try:
-	getClients()
-	while True:
-		pass
+	recvMsgThread = threading.Thread(target=recvMsg, args=())
+	recvMsgThread.start()
+	print "Now waiting for players to connect..."
+except KeyboardInterrupt:
+	sys.exit()
 except Exception as e:
 	print e
 	sys.exit()
