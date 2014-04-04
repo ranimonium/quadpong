@@ -24,12 +24,12 @@ client_addresses = []
 #contains available indices for client_address
 available_IDs = [i for i in range(NUM_PLAYERS)]
 players_AI = []
+# players_AI = [2, 3]
 
-# DONE = True
 
 
 def timer():
-	seconds = 90
+	seconds = 92
 	while seconds >= 0:
 		for c in client_addresses:
 			serverSocket.sendto("TIME" + str(seconds), c)
@@ -45,8 +45,6 @@ def recvMsg():
 		
 		header = msg[:4]
 		
-		# print available_IDs
-
 		if header == "JOIN": #sends ID too
 			if len(client_addresses) < NUM_PLAYERS:
 				ID_toGive = available_IDs.pop(0)
@@ -60,15 +58,17 @@ def recvMsg():
 			if len(client_addresses) == NUM_PLAYERS:
 				t = threading.Thread(target=timer, args=())
 				t.start()
-				# notDONE = False
 			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
 		elif header == "STAT":
 			for c in client_addresses:
 				serverSocket.sendto( msg, c )
 		elif header == "POUT": #player quits
-			
+
 			print msg
 			ID_quitter = int(msg[4])
+
+			for c in client_addresses:
+				serverSocket.sendto("SOUT" + msg[4], c)
 
 			#player quits upon wait
 			if len(client_addresses) < NUM_PLAYERS:
@@ -81,8 +81,7 @@ def recvMsg():
 				players_AI.append( ID_quitter )
 				print str(players_AI)
 				serverSocket.sendto(header + "KBYE", clientAddress)
-				# client_addresses.remove(clientAddress)
-				
+
 				if len(players_AI) != NUM_PLAYERS:
 					
 					#handle the AI handled by quitter (if there's any)

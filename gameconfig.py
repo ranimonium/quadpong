@@ -1,15 +1,13 @@
 import elements as e
 import random
-
-# set up the window
-WINDOWWIDTH = 800	
-WINDOWHEIGHT = 500
-
+import pygameconfig
+from pygameconfig import *
 
 #####################  GAME CONFIGURATION  #####################
 
 ########## set up timer ##########
-frame_rate = 600 #Frames Per Second
+seconds = None
+frame_rate = None #Frames Per Second
 
 ########## set up arena's "dimensions" ##########
 arenaTOP = WINDOWHEIGHT/10
@@ -19,7 +17,7 @@ arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
 ########## set up players ##########
 
-NUM_PLAYERS = 2
+NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
@@ -42,10 +40,11 @@ for p in players:
 		p.set_allowableDirection( ('N', 'S') )
 	p.set_direction('NONE')
 
-PSPEED = 2	#paddle speed
+PSPEED = 4	#paddle speed
 
 ### INDICES OF PLAYERS ON AI ###
 players_AI = []
+# players_AI = [2, 3]
 # print "DAMI " + str(len(players))
 for ai in players_AI:
 	players[ai].on_AI()
@@ -57,7 +56,7 @@ ball = e.Ball( 'RED', [250, 250])
 ball.set_direction('NE')
 ball.set_heldBy(0) #default, player 0 holds ball
 
-BSPEED = 2	#ball speed
+BSPEED = 3	#ball speed
 
 ########## border coordinates and border lengths ##########
 borderdiv_h = 6
@@ -77,11 +76,8 @@ borders = {
 ########## BLAH BLAH BLAH ##########
 
 curScene = 'home'
-# curScene = 'setPlayer'
 MY_ID = None
 myUsername = ""
-ball.set_heldBy(0)
-
 
 
 ################################################################

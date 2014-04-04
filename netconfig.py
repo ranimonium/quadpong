@@ -1,9 +1,11 @@
 from socket import *
 from gameconfig import *
 
+
 ##################  NETWORKING CONFIGURATION  ##################
 
-serverName = "127.0.0.1"
+# serverName = "127.0.0.1"
+serverName = "192.168.1.100"
 serverPort = 12000
 
 clientSocket = socket(AF_INET, SOCK_DGRAM)
@@ -22,12 +24,9 @@ def send_shiz(clientMessage, MY_ID=None):
 		clientSocket.sendto(clientMessage, (serverName, serverPort))
 	elif clientMessage == "STAT":
 		shizSendMsg = clientMessage + str(MY_ID) + '$SHIZ$'.join( [ '$BALL$'.join(ball_s), '$PLYR$'.join(plyr_s) ] ) + "~ENDDATA~"
-		print shizSendMsg
 		clientSocket.sendto(shizSendMsg, (serverName, serverPort))
 	elif clientMessage == "POUT":
-		print "SEND: " + str(MY_ID)
-		clientSocket.sendto(clientMessage + str(MY_ID), (serverName, serverPort))
-		# myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
+		clientSocket.sendto(clientMessage + str(MY_ID) + "".join([str(ai) for ai in players_AI]), (serverName, serverPort))
 
 def recv_shiz():
 
@@ -36,33 +35,35 @@ def recv_shiz():
 		msg, serverAddress = clientSocket.recvfrom(BUFFER_SIZE)
 		serverMessage = msg[:4]
 
-		# print msg
 
 		if serverMessage == "JOIN":
 			return int(msg[4:])
 		elif serverMessage == "DONE":
 			return int(msg[4:])
 		elif serverMessage == "TIME":
-			pass
+			global seconds
+			seconds = int(msg[4:])
 		elif serverMessage == "POUT":
 			print msg
 			if msg[5:] == "KBYE":
 				clientSocket.close()
 				sys.exit()
+		elif serverMessage == "SOUT":
+			print players[int(msg[4])].username + " has disconnected!"
+		elif serverMessage == "DOAI":
+			quittersIDs = msg[5:]
+			print quittersIDs
+			for q in quittersIDs:
+				print "quitter " + q
+				ID = int(q)
+				players_AI.append(ID)
 		elif serverMessage == "STAT":
 
-			global players
-
-			print "RECV STAT1"
 			msg = msg.split("~ENDDATA~")
-			print "RECV STAT2 " + msg
-
+			
 			try:
-				print "RECV STAT3"
 				for m in msg:
-					print "RECV STAT4 " + m
-					# m has ball status and player status in it
-					# print m
+
 					ID = int(m[4])
 
 					m = m[5:] # trim from m the serverMessage and ID
@@ -71,13 +72,12 @@ def recv_shiz():
 					ball_r = m[0].split("$BALL$") #separate ball fields
 					plyr_r = m[1].split("$PLYR$") #separate player fields
 
-					#update the ball if my own copy of ball 
-					if ball_r[3] != players[MY_ID].color:
+					if ball_r[0] != MY_ID:
 						ball.set_heldBy( int(ball_r[0]) )
 						ball.set_pos( (int(ball_r[1]), int(ball_r[2]) ) )
 						ball.set_color( ball_r[3] )
 						ball.set_direction( ball_r[4] )
-						
+
 					#update the player
 					if ID != MY_ID:
 						players[ID].uid = int(plyr_r[0])
@@ -90,8 +90,3 @@ def recv_shiz():
 
 			except Exception as exc:
 				pass
-				# print e
-
-
-
-################################################################

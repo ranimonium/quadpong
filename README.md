@@ -48,7 +48,7 @@ CS145MP.
 * [DONE] A user must be able to send messages to all users, or to selected users.
 * [DONE] Aside from aliases and messages, a user must also have the option to share other kinds of information (e.g. status messages).
 * [DONE] A user must have the option to voluntarily disconnect.
-* [TODO] A user must be notified when another user disconnects.
+* [DONE] A user must be notified when another user disconnects.
 
 ### What the APPLICATION LAYER PROTOCOL is responsible for: ###
 * The types of messages exchanged, for example, request messages and response messages
