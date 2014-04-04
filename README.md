@@ -43,8 +43,8 @@ Codera. Davalos. Pacumio.
  * Pygame
 
 ### HOW TO RUN ###
-* SERVER: run "python server.py"
-* CLIENT: run "python pong.py"
+* SERVER: run  a single `python server.py`
+* CLIENT: run `python pong.py` four times
 
 ### PROTOCOL REQUIREMENTS ###
 * [DONE] A connected user must have an identifier. Users that are connected to the same host must have  distinct identifiers.
@@ -68,9 +68,10 @@ Codera. Davalos. Pacumio.
  * {header}{ID}{message}
 * SEMANTICS
  * headers:
-  * "JOIN" : client connects to server, server assigns it ID
-  * "DONE" : notification to the clients that they can now play
-  * "STAT" : "status"; the header when sending messages essential to the game itself
+   - "JOIN" : client connects to server, server assigns it ID
+   - "DONE" : notification to the clients that they can now play
+   - "STAT" : "status"; the header when sending messages essential to the game itself
+   - "TIME" : client receives time update from SENDER
  * messages:
   * information on the player's paddle 
   * information on the player's influence on the ball
