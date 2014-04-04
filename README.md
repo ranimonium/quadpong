@@ -1,11 +1,13 @@
 QUADPONG
 ========
 
-CS145MP. Second Semester AY 2013-2014.  Instructor:  Edgar Felizmenio
+Codera. Davalos. Pacumio.
 --------
-*Codera, Ginette
-*Davalos, Jadurani
-*Pacumio Lara
+
+* CS145MP
+* Second Semester AY 2013-2014 
+* Instructor:  Edgar Felizmenio
+
 
 #### Specifications ####
 * See attached pdf
