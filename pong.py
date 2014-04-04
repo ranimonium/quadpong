@@ -96,7 +96,6 @@ curScene = 'wait'
 # curScene = 'setPlayer'
 MY_ID = None
 myUsername = ""
-ball.set_heldBy(0)
 
 
 
@@ -494,7 +493,6 @@ def game():
 			ball.set_heldBy(-1)
 
 
-
 		for event in pygame.event.get():
 			
 			if event.type == QUIT:
@@ -606,9 +604,12 @@ def game():
 
 		#update ball position
 		for ai in players_AI:
-			if ball.color == players[MY_ID].color or players[ai].color == ball.color:
+			if players[ai].color == ball.color:
 				ball.update_pos(BSPEED)
-
+		
+		if ball.color == players[MY_ID].color:
+			ball.update_pos(BSPEED)
+		
 		ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
 
 
