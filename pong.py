@@ -1,16 +1,209 @@
 import pygame, sys, time, random, thread
+import elements as e
 from pygame.locals import *
-from netconfig import *
+from socket import *
+
+# from netconfig import *
 
 ####################  PYGAME CONFIGURATION  ####################
 
 # set up pygame 
 pygame.init()
 
+WINDOWWIDTH = 800	
+WINDOWHEIGHT = 500
+
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT+50), 0, 32)
 pygame.display.set_caption('QuadPong')
 
 clock = pygame.time.Clock()
+
+
+# set up the window
+
+
+#####################  GAME CONFIGURATION  #####################
+
+########## set up timer ##########
+frame_rate = 600 #Frames Per Second
+
+########## set up arena's "dimensions" ##########
+arenaTOP = WINDOWHEIGHT/10
+arenaLEFT = WINDOWWIDTH/10
+arenaWIDTH = WINDOWWIDTH - arenaLEFT*2
+arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
+
+########## set up players ##########
+
+NUM_PLAYERS = 4
+
+paddleWIDTH, paddleHEIGHT = 14, 100
+
+pcolors = ['RED', 'GREEN', 'BLUE', 'YELLOW']
+pcoords = [
+		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, arenaTOP - paddleWIDTH/2],					#player 0 top
+		[(WINDOWWIDTH)/2 - paddleHEIGHT/2, (arenaTOP+arenaHEIGHT) - paddleWIDTH/2 ], 	#player 1 bottom
+		[arenaLEFT - 5, WINDOWHEIGHT/2 - paddleHEIGHT/2], 								#player 2 left
+		[(arenaLEFT + arenaWIDTH) - paddleWIDTH/2, WINDOWHEIGHT/2 - paddleHEIGHT/2],	#player 3 right
+	]
+
+# instantiate Player class from elements module
+players = [e.Player(i, pcolors[i], pcoords[i]) for i in range(4)]
+
+# set Player direction to be NONE (meaning they're not moving yet)
+for p in players:
+	if players.index(p) < 2:
+		p.set_allowableDirection( ('W', 'E') )
+	else:
+		p.set_allowableDirection( ('N', 'S') )
+	p.set_direction('NONE')
+
+PSPEED = 2	#paddle speed
+
+### INDICES OF PLAYERS ON AI ###
+players_AI = []
+# print "DAMI " + str(len(players))
+for ai in players_AI:
+	players[ai].on_AI()
+
+
+########## set up the ball ##########
+ballWIDTH, ballHEIGHT = 16, 16
+ball = e.Ball( 'RED', [250, 250])
+ball.set_direction('NE')
+ball.set_heldBy(0) #default, player 0 holds ball
+
+BSPEED = 2	#ball speed
+
+########## border coordinates and border lengths ##########
+borderdiv_h = 6
+borderdiv_v = 20
+
+borders = {
+	'topleft_h': [(arenaLEFT, arenaTOP),(arenaLEFT + arenaWIDTH/borderdiv_h, arenaTOP)],
+	'topright_h': [(arenaLEFT + arenaWIDTH - arenaWIDTH/borderdiv_h, arenaTOP),(arenaLEFT + arenaWIDTH, arenaTOP)],
+	'bottomleft_h':  [(arenaLEFT, arenaTOP+arenaHEIGHT),(arenaLEFT + arenaWIDTH/borderdiv_h, arenaTOP + arenaHEIGHT)],
+	'bottomright_h':  [(arenaLEFT + arenaWIDTH - arenaWIDTH/borderdiv_h, arenaTOP+arenaHEIGHT),(arenaLEFT + arenaWIDTH, arenaTOP + arenaHEIGHT)],
+	'topleft_v': [(arenaLEFT, arenaTOP),(arenaLEFT, arenaTOP + arenaHEIGHT/borderdiv_v)],
+	'topright_v':  [(arenaLEFT+arenaWIDTH, arenaTOP),(arenaLEFT+arenaWIDTH, arenaTOP + arenaHEIGHT/borderdiv_v)],
+	'bottomleft_v':  [(arenaLEFT, arenaTOP+arenaHEIGHT - arenaHEIGHT/borderdiv_v),(arenaLEFT, arenaTOP + arenaHEIGHT)],
+	'bottomright_v':  [(arenaLEFT+arenaWIDTH, arenaTOP+arenaHEIGHT - arenaHEIGHT/borderdiv_v),(arenaLEFT+arenaWIDTH, arenaTOP + arenaHEIGHT)]
+}
+
+########## BLAH BLAH BLAH ##########
+
+curScene = 'home'
+# curScene = 'setPlayer'
+MY_ID = None
+myUsername = ""
+ball.set_heldBy(0)
+
+
+
+################################################################
+
+
+##################  NETWORKING CONFIGURATION  ##################
+
+serverName = "127.0.0.1"
+serverPort = 12000
+
+clientSocket = socket(AF_INET, SOCK_DGRAM)
+
+BUFFER_SIZE=2048
+
+### SHIZ TO SEND ###
+ball_s = [] # ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
+plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
+
+def send_shiz(clientMessage, MY_ID=None):
+	
+	if clientMessage == "JOIN":
+		clientSocket.sendto(clientMessage, (serverName, serverPort))
+	elif clientMessage == "DONE":
+		clientSocket.sendto(clientMessage, (serverName, serverPort))
+	elif clientMessage == "STAT":
+		shizSendMsg = clientMessage + str(MY_ID) + '$SHIZ$'.join( [ '$BALL$'.join(ball_s), '$PLYR$'.join(plyr_s) ] ) + "~ENDDATA~"
+		# print shizSendMsg
+		clientSocket.sendto(shizSendMsg, (serverName, serverPort))
+	elif clientMessage == "POUT":
+		print "SEND: " + str(MY_ID)
+		clientSocket.sendto(clientMessage + str(MY_ID), (serverName, serverPort))
+		# myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
+
+def recv_shiz():
+
+	while True:
+
+		msg, serverAddress = clientSocket.recvfrom(BUFFER_SIZE)
+		serverMessage = msg[:4]
+
+		# print msg
+
+		if serverMessage == "JOIN":
+			return int(msg[4:])
+		elif serverMessage == "DONE":
+			return int(msg[4:])
+		elif serverMessage == "TIME":
+			pass
+		elif serverMessage == "POUT":
+			print msg
+			if msg[5:] == "KBYE":
+				clientSocket.close()
+				sys.exit()
+		elif serverMessage == "STAT":
+
+			# print "RECV STAT1"
+			global players
+
+			# print "RECV STAT1"
+			msg = msg.split("~ENDDATA~")
+			# print "RECV STAT2 " + str(msg)
+
+			try:
+				# print "RECV STAT3"
+				for m in msg:
+					# print "RECV STAT4 " + m
+					# m has ball status and player status in it
+					# print m
+					ID = int(m[4])
+
+					m = m[5:] # trim from m the serverMessage and ID
+					m = m.split("$SHIZ$") #separate ball status from player status
+
+					ball_r = m[0].split("$BALL$") #separate ball fields
+					plyr_r = m[1].split("$PLYR$") #separate player fields
+
+					#update the ball if my own copy of ball 
+					if ball_r[3] != players[MY_ID].color:
+						ball.set_heldBy( int(ball_r[0]) )
+						ball.set_pos( (int(ball_r[1]), int(ball_r[2]) ) )
+						ball.set_color( ball_r[3] )
+						ball.set_direction( ball_r[4] )
+						
+					#update the player
+					if ID != MY_ID:
+						players[ID].uid = int(plyr_r[0])
+						players[ID].x = int(plyr_r[1])
+						players[ID].y = int(plyr_r[2])
+						players[ID].score = int(plyr_r[3])
+						players[ID].color = plyr_r[4]
+						players[ID].direction = plyr_r[5]
+						players[ID].username = plyr_r[6]
+
+			except Exception as exc:
+				pass
+				# print e
+
+
+
+################################################################
+
+
+
+
+
+
 
 ############ HOME SCREEN ############ 
 def home():
@@ -98,18 +291,27 @@ def setPlayer():
 
 		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 72)
 
-		label = ' USERNAME: '
-		labelSurfaceObj = fontObj.render(label, False, e.COLOR['GREEN'])
+		label = 'USERNAME: '
+		labelSurfaceObj = fontObj.render(label, False, e.COLOR['WHITE'])
 		labelRectobj = labelSurfaceObj.get_rect()
 		labelRectobj.midright = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 		windowSurface.blit(labelSurfaceObj, labelRectobj)
 
 		name = " " + myUsername + "".join(['_' for i in range( 8-(len(myUsername)) )])
-		nameSurfaceObj = fontObj.render(name, False, e.COLOR['GREEN'])
+		nameSurfaceObj = fontObj.render(name, False, e.COLOR['WHITE'])
 		nameRectObj = nameSurfaceObj.get_rect()
 		nameRectObj.midleft = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 		# pygame.draw.rect(windowSurface, e.COLOR['WHITE'], nameRectObj, 0)
 		windowSurface.blit(nameSurfaceObj, nameRectObj)
+
+
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 50)
+		enter = 'PRESS ENTER TO CONTINUE'
+		enterSurfaceObj = fontObj.render(enter, False, e.COLOR['WHITE'])
+		enterRectObj = enterSurfaceObj.get_rect()
+		enterRectObj.center = (WINDOWWIDTH/2 - 10, 3*WINDOWHEIGHT/4)
+
+		windowSurface.blit(enterSurfaceObj, enterRectObj)
 
 	draw_components()
 	setPlayer_events()
@@ -131,7 +333,7 @@ def wait():
 		pygame.display.update()
 
 
-	write_text("Connecting to server...", "GREEN", (50, 50))
+	write_text("Connecting to server...", "WHITE", (50, 50))
 
 	def wait_events():
 		while curScene == 'wait':
@@ -155,7 +357,7 @@ def wait():
 		send_shiz("JOIN")
 		MY_ID = recv_shiz()
 
-		players_AI.remove(MY_ID)
+		# players_AI.remove(MY_ID)
 
 		if MY_ID == -1:
 			print "Sorry, slots full for now.  Try again later."
@@ -164,14 +366,14 @@ def wait():
 			return None
 	
 	print "Connected! Your ID: " + str(MY_ID)
-	write_text( "CONNECTED!", "GREEN", (50, 50 + 70*1) )
+	write_text( "CONNECTED!", "WHITE", (50, 50 + 70*1) )
 
 	players[MY_ID].set_username(myUsername)
 	write_text( "HI, " + players[MY_ID].username + "!", players[MY_ID].color, (50, 50 + 70*2) )
 	write_text( "THIS WILL BE THE COLOR OF YOUR PADDLE.",  players[MY_ID].color, (50, 50 + 70*3) )
 
 	print "Waiting for other players to connect..."
-	write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  players[MY_ID].color, (50, 50 + 70*4) )
+	write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  "WHITE", (50, 50 + 70*4) )
 
 	# print "rawr"
 	while True:
@@ -183,7 +385,8 @@ def wait():
 			thread.start_new_thread(recv_shiz, ())
 			global frame_rate
 			frame_rate = 600
-			# time.sleep(3)
+			write_text( "READY!",  "WHITE", (50, 50 + 70*5) )
+			time.sleep(2)
 			break
 
 
@@ -409,8 +612,8 @@ def game():
 			players[ai].update_pos(PSPEED)
 		#prepare own paddle status for sending + ball.heldBy shit
 		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
-		send_shiz("STAT")
-		# own_status = [str(players[MY_ID].uid), players[MY_ID].color, players[MY_ID].direction, str(players[MY_ID].x), str(players[MY_ID].y)]
+		# print "stat " + str(MY_ID)
+		send_shiz("STAT", MY_ID)
 
 	#######################################################
 

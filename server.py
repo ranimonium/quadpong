@@ -6,7 +6,7 @@
 	
 """
 
-NUM_PLAYERS = 2
+NUM_PLAYERS = 4
 BUFFER_SIZE = 2048
 
 import socket
@@ -32,11 +32,14 @@ def recvMsg():
 		msg, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
 		
 		header = msg[:4]
+		
+		# print available_IDs
 
 		if header == "JOIN": #sends ID too
 			if len(client_addresses) < NUM_PLAYERS:
-				client_addresses.insert(available_IDs.pop(0), clientAddress)
-				serverSocket.sendto(header + str(client_addresses.index(clientAddress)), clientAddress)
+				ID_toGive = available_IDs.pop(0)
+				client_addresses.insert(ID_toGive, clientAddress)
+				serverSocket.sendto(header + str(ID_toGive), clientAddress)
 				print str(clientAddress) + " has connected!"
 				print str(NUM_PLAYERS - len(client_addresses)) + " more player(s) to go."
 			else:
@@ -44,7 +47,10 @@ def recvMsg():
 		elif header == "DONE":
 			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
 		elif header == "STAT":
+			# print msg
+			print client_addresses
 			for c in client_addresses:
+				print c
 				serverSocket.sendto( msg, c )
 		elif header == "POUT": #player quits
 			
