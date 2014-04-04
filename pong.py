@@ -93,7 +93,6 @@ borders = {
 ########## BLAH BLAH BLAH ##########
 
 curScene = 'wait'
-# curScene = 'setPlayer'
 MY_ID = None
 myUsername = ""
 
@@ -652,26 +651,43 @@ def game():
 ############ GAME END SCENE ############ 
 def over():
 	
+
+	def over_events():
+		for event in pygame.event.get():
+			
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+			
+			elif event.type == KEYDOWN:
+				if event.key == K_ESCAPE:
+					pygame.event.post(pygame.event.Event(QUIT))	
+
+
 	def draw_components():
 		# ---- draw GAME OVER here ----
+		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 120)
 
-
+		overSurfaceObj = fontObj.render("GAME OVER", False, e.COLOR[random.choice(pcolors)])
+		overRectobj = overSurfaceObj.get_rect()
+		overRectobj.center = (WINDOWWIDTH/2, WINDOWHEIGHT/5)
+		windowSurface.blit(overSurfaceObj, overRectobj)
 
 		# ---- draw scores ----
 		fontObj = pygame.font.Font("assets/fonts/pixel_maz.ttf", 60)
 		
 		pname_coord = [
-				(arenaLEFT + 50, arenaTOP + 100 + 60*0),
-				(arenaLEFT + 50, arenaTOP + 100 + 60*1),
-				(arenaLEFT + 50, arenaTOP + 100 + 60*2),
-				(arenaLEFT + 50, arenaTOP + 100 + 60*3)
+				(arenaLEFT + 50, arenaTOP + 150 + 60*0),
+				(arenaLEFT + 50, arenaTOP + 150 + 60*1),
+				(arenaLEFT + 50, arenaTOP + 150 + 60*2),
+				(arenaLEFT + 50, arenaTOP + 150 + 60*3)
 			]
 
 		pscore_coord = [
-				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*0),
-				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*1),
-				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*2),
-				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 100 + 60*3)
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 150 + 60*0),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 150 + 60*1),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 150 + 60*2),
+				(arenaLEFT + arenaWIDTH - 130, arenaTOP + 150 + 60*3)
 			]
 
 		for p in players:
@@ -685,7 +701,8 @@ def over():
 			msgRectobj.topleft = pscore_coord[players.index(p)]
 			windowSurface.blit(msgSurfaceObj, msgRectobj)
 
-
+	over_events()
+	draw_components()
 
 
 try:
