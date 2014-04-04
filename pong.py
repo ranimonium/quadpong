@@ -36,7 +36,7 @@ arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
 ########## set up players ##########
 
-NUM_PLAYERS = 4
+NUM_PLAYERS = 1
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
@@ -599,10 +599,11 @@ def game():
 		#draw timer
 		global seconds
 		output_string = str(seconds)
-		font = pygame.font.Font('assets/fonts/5x5_pixel.ttf', 100)
-		text = font.render(output_string, True, e.COLOR['DIMGRAY'])
+		font = pygame.font.Font('assets/fonts/5x5_pixel.ttf', 200)
+		text = font.render(output_string, True, (35,35,35))
 		textRectobj = text.get_rect()
-		textRectobj.center = (WINDOWHEIGHT/2, WINDOWWIDTH/2)
+		textRectobj.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		#pygame.draw.rect(windowSurface, (255, 255, 255), textRectobj, 1)
 		windowSurface.blit(text, textRectobj)
 		
 		return rects
