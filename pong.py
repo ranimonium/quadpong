@@ -26,7 +26,7 @@ clock = pygame.time.Clock()
 
 ########## set up timer ##########
 seconds = None
-frame_rate = 600 #Frames Per Second
+frame_rate = None #Frames Per Second
 
 ########## set up arena's "dimensions" ##########
 arenaTOP = WINDOWHEIGHT/10
@@ -36,7 +36,7 @@ arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
 ########## set up players ##########
 
-NUM_PLAYERS = 1
+NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
@@ -93,7 +93,7 @@ borders = {
 
 ########## BLAH BLAH BLAH ##########
 
-curScene = 'wait'
+curScene = 'home'
 MY_ID = None
 myUsername = ""
 
@@ -340,7 +340,6 @@ def wait():
 		pygame.display.update()
 
 
-	write_text("Connecting to server...", "WHITE", (50, 50))
 
 	def wait_events():
 		while curScene == 'wait':
@@ -357,6 +356,7 @@ def wait():
 
 	thread.start_new_thread(wait_events, ())
 
+	# write_text("Connecting to server...", "WHITE", (50, 50))
 
 	# connect to server
 	while MY_ID == None:
@@ -373,14 +373,17 @@ def wait():
 			return None
 	
 	print "Connected! Your ID: " + str(MY_ID)
-	write_text( "CONNECTED!", "WHITE", (50, 50 + 70*1) )
+	# write_text( "CONNECTED!", "WHITE", (50, 50 + 70*1) )
 
 	players[MY_ID].set_username(myUsername)
-	write_text( "HI, " + players[MY_ID].username + "!", players[MY_ID].color, (50, 50 + 70*2) )
-	write_text( "THIS WILL BE THE COLOR OF YOUR PADDLE.",  players[MY_ID].color, (50, 50 + 70*3) )
+	write_text( "HI, " + players[MY_ID].username + "!", players[MY_ID].color, (50, 50 + 70*0) )
+	# write_text( "HI, " + players[MY_ID].username + "!", players[MY_ID].color, (50, 50 + 70*2) )
+	write_text( "THIS WILL BE THE COLOR OF YOUR PADDLE.",  players[MY_ID].color, (50, 50 + 70*1) )
+	# write_text( "THIS WILL BE THE COLOR OF YOUR PADDLE.",  players[MY_ID].color, (50, 50 + 70*3) )
 
 	print "Waiting for other players to connect..."
-	write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  "WHITE", (50, 50 + 70*4) )
+	write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  "WHITE", (50, 50 + 70*2) )
+	# write_text( "WAITING FOR OTHER PLAYERS TO CONNECT...",  "WHITE", (50, 50 + 70*4) )
 
 	# print "rawr"
 	while True:
@@ -392,7 +395,8 @@ def wait():
 			thread.start_new_thread(recv_shiz, ())
 			global frame_rate
 			frame_rate = 600
-			write_text( "READY!",  "WHITE", (50, 50 + 70*5) )
+			write_text( "READY!",  "WHITE", (50, 50 + 70*3) )
+			# write_text( "READY!",  "WHITE", (50, 50 + 70*5) )
 			time.sleep(2)
 			break
 
@@ -724,18 +728,22 @@ try:
 	#main application loop tralalalala
 	while True:
 		
+
 		# paint background
 		windowSurface.fill(e.COLOR['DIMMESTGRAY'])
 
 		if curScene == 'home':
+			frame_rate = 10
 			home()
 		elif curScene == 'setPlayer':
 			setPlayer()
 		elif curScene == 'wait':
 			wait()
 		elif curScene == 'game':
+			frame_rate = 500
 			game()
 		elif curScene == 'over':
+			frame_rate = 5
 			over()
 
 		pygame.display.update()

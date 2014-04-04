@@ -6,7 +6,7 @@
 	
 """
 
-NUM_PLAYERS = 1
+NUM_PLAYERS = 4
 BUFFER_SIZE = 2048
 
 import socket, time
@@ -26,6 +26,7 @@ available_IDs = [i for i in range(NUM_PLAYERS)]
 players_AI = []
 
 # DONE = True
+
 
 def timer():
 	seconds = 90
