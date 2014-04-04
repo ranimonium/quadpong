@@ -6,7 +6,7 @@
 	
 """
 
-NUM_PLAYERS = 1
+NUM_PLAYERS = 4
 BUFFER_SIZE = 2048
 
 import socket, time
