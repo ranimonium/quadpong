@@ -25,6 +25,7 @@ clock = pygame.time.Clock()
 #####################  GAME CONFIGURATION  #####################
 
 ########## set up timer ##########
+seconds = None
 frame_rate = 600 #Frames Per Second
 
 ########## set up arena's "dimensions" ##########
@@ -35,7 +36,7 @@ arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
 ########## set up players ##########
 
-NUM_PLAYERS = 4
+NUM_PLAYERS = 1
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
@@ -142,7 +143,8 @@ def recv_shiz():
 		elif serverMessage == "DONE":
 			return int(msg[4:])
 		elif serverMessage == "TIME":
-			pass
+			global seconds
+			seconds = int(msg[4:])
 		elif serverMessage == "POUT":
 			print msg
 			if msg[5:] == "KBYE":
@@ -400,7 +402,9 @@ def game():
 
 	#################### GAME TIMER FCN ####################	
 
-
+	if seconds==0:
+		global curScene
+		curScene = 'over'
 
 
 
@@ -591,6 +595,16 @@ def game():
 			msgRectobj.topleft = pscore_coord[players.index(p)]
 			windowSurface.blit(msgSurfaceObj, msgRectobj)
 
+		#draw timer
+		global seconds
+		output_string = str(seconds)
+		font = pygame.font.Font('assets/fonts/5x5_pixel.ttf', 200)
+		text = font.render(output_string, True, (35,35,35))
+		textRectobj = text.get_rect()
+		textRectobj.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		#pygame.draw.rect(windowSurface, (255, 255, 255), textRectobj, 1)
+		windowSurface.blit(text, textRectobj)
+		
 		return rects
 
 	#######################################################
@@ -656,6 +670,7 @@ def over():
 		for event in pygame.event.get():
 			
 			if event.type == QUIT:
+				clientSocket.close()
 				pygame.quit()
 				sys.exit()
 			
