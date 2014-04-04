@@ -24,6 +24,12 @@ clock = pygame.time.Clock()
 
 #####################  GAME CONFIGURATION  #####################
 
+############ set up sounds ##########
+bgmusicfile = 'assets/sounds/bgmusic.mp3'
+hitSoundObj = pygame.mixer.Sound('assets/sounds/Hit.wav')
+bounceSoundObj = pygame.mixer.Sound('assets/sounds/Bounce.wav')
+scoreSoundObj = pygame.mixer.Sound('assets/sounds/Score.wav')
+
 ########## set up timer ##########
 seconds = None
 frame_rate = 600 #Frames Per Second
@@ -36,7 +42,7 @@ arenaHEIGHT = WINDOWHEIGHT - arenaTOP*2
 
 ########## set up players ##########
 
-NUM_PLAYERS = 1
+NUM_PLAYERS = 4
 
 paddleWIDTH, paddleHEIGHT = 14, 100
 
@@ -206,10 +212,12 @@ def recv_shiz():
 
 ################################################################
 
-
-
-
-
+########### PLAY BACKGROUND MUSIC ##############
+def playmusic():
+	pygame.mixer.music.load(bgmusicfile)
+	#pygame.mixer.music.get_volume()
+	#pygame.mixer.music.set_volume()
+	pygame.mixer.music.play(-1)
 
 
 ############ HOME SCREEN ############ 
@@ -423,6 +431,7 @@ def game():
 		
 		if rect_i != -1:
 			if isPaddle:
+				hitSoundObj.play()
 				ball.set_color(players[rect_i].color)
 				if rect_i < 2: 
 					ball.bounce('horizontal')
@@ -430,6 +439,7 @@ def game():
 					ball.bounce('vertical')
 			else:
 				# checks if the ball had just hit a horizontal border
+				bounceSoundObj.play()
 				if borders.keys()[rect_i][-1:] == 'h':
 					ball.bounce('horizontal')
 				else:
@@ -538,7 +548,7 @@ def game():
 	################### DRAW COMPONENTS ###################
 	
 	def draw_components():
-		
+	
 		# draw stage borders
 		pygame.draw.rect(windowSurface, e.COLOR['DIMGRAY'], [arenaLEFT, arenaTOP, arenaWIDTH, arenaHEIGHT], 1)
 		border_rects = []
@@ -546,7 +556,17 @@ def game():
 		# print borders
 		for b in borders.values():
 			border_rects.append( pygame.draw.line(windowSurface, e.COLOR['DIMMERGRAY'], b[0], b[1], paddleWIDTH/2) )
-		
+
+		#draw timer
+		global seconds
+		output_string = str(seconds)
+		font = pygame.font.Font('assets/fonts/5x5_pixel.ttf', 200)
+		text = font.render(output_string, True, (35,35,35))
+		textRectobj = text.get_rect()
+		textRectobj.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+		#pygame.draw.rect(windowSurface, (255, 255, 255), textRectobj, 1)
+		windowSurface.blit(text, textRectobj)
+			
 
 		# draw the paddles
 		paddle_rects = []
@@ -594,16 +614,6 @@ def game():
 			msgRectobj = msgSurfaceObj.get_rect()
 			msgRectobj.topleft = pscore_coord[players.index(p)]
 			windowSurface.blit(msgSurfaceObj, msgRectobj)
-
-		#draw timer
-		global seconds
-		output_string = str(seconds)
-		font = pygame.font.Font('assets/fonts/5x5_pixel.ttf', 200)
-		text = font.render(output_string, True, (35,35,35))
-		textRectobj = text.get_rect()
-		textRectobj.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
-		#pygame.draw.rect(windowSurface, (255, 255, 255), textRectobj, 1)
-		windowSurface.blit(text, textRectobj)
 		
 		return rects
 
@@ -722,6 +732,9 @@ def over():
 
 try:
 	#main application loop tralalalala
+	
+	playmusic()
+	
 	while True:
 		
 		# paint background
