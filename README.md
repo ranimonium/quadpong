@@ -46,8 +46,8 @@ CS145MP.
 * [DONE] A connected user must have the option to provide an alias/username. Users that are connected to the same host may have the same alias/username.
 * [DONE] A connected user must be able to receive messages from other users that are connected on the same host.
 * [DONE] A user must be able to send messages to all users, or to selected users.
-* [TODO] Aside from aliases and messages, a user must also have the option to share other kinds of information (e.g. status messages).
-* [TODO] A user must have the option to voluntarily disconnect.
+* [DONE] Aside from aliases and messages, a user must also have the option to share other kinds of information (e.g. status messages).
+* [DONE] A user must have the option to voluntarily disconnect.
 * [TODO] A user must be notified when another user disconnects.
 
 ### What the APPLICATION LAYER PROTOCOL is responsible for: ###

@@ -92,7 +92,7 @@ borders = {
 
 ########## BLAH BLAH BLAH ##########
 
-curScene = 'home'
+curScene = 'wait'
 # curScene = 'setPlayer'
 MY_ID = None
 myUsername = ""
@@ -127,8 +127,8 @@ def send_shiz(clientMessage, MY_ID=None):
 		# print shizSendMsg
 		clientSocket.sendto(shizSendMsg, (serverName, serverPort))
 	elif clientMessage == "POUT":
-		print "SEND: " + str(MY_ID)
-		clientSocket.sendto(clientMessage + str(MY_ID), (serverName, serverPort))
+		# print "SEND: " + str(MY_ID)
+		clientSocket.sendto(clientMessage + str(MY_ID) + "".join([str(ai) for ai in players_AI]), (serverName, serverPort))
 		# myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
 
 def recv_shiz():
@@ -138,7 +138,6 @@ def recv_shiz():
 		msg, serverAddress = clientSocket.recvfrom(BUFFER_SIZE)
 		serverMessage = msg[:4]
 
-		# print msg
 
 		if serverMessage == "JOIN":
 			return int(msg[4:])
@@ -151,6 +150,14 @@ def recv_shiz():
 			if msg[5:] == "KBYE":
 				clientSocket.close()
 				sys.exit()
+		elif serverMessage == "DOAI":
+			print msg
+			quittersIDs = msg[5:]
+			print quittersIDs
+			for q in quittersIDs:
+				print "quitter " + q
+				ID = int(q)
+				players_AI.append(ID)			
 		elif serverMessage == "STAT":
 
 			# print "RECV STAT1"
@@ -192,8 +199,8 @@ def recv_shiz():
 						players[ID].username = plyr_r[6]
 
 			except Exception as exc:
+				# print exc
 				pass
-				# print e
 
 
 
@@ -339,10 +346,10 @@ def wait():
 		while curScene == 'wait':
 			for event in pygame.event.get():
 				if event.type == QUIT:
-					print "send pout mwah"
-					pygame.quit()
 					send_shiz("POUT", MY_ID)
-
+					clientSocket.close()
+					pygame.quit()
+					sys.exit()
 			
 				elif event.type == KEYDOWN and event.key == K_ESCAPE:
 					pygame.event.post(pygame.event.Event(QUIT))	
@@ -491,6 +498,7 @@ def game():
 		for event in pygame.event.get():
 			
 			if event.type == QUIT:
+				send_shiz("POUT", MY_ID)
 				clientSocket.close()
 				pygame.quit()
 				sys.exit()
@@ -597,8 +605,9 @@ def game():
 		global plyr_s
 
 		#update ball position
-		# if ball.color == players[MY_ID].color:
-		ball.update_pos(BSPEED)
+		for ai in players_AI:
+			if ball.color == players[MY_ID].color or players[ai].color == ball.color:
+				ball.update_pos(BSPEED)
 
 		ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
 
@@ -607,13 +616,16 @@ def game():
 		# for p in players:
 		# 	p.update_pos(PSPEED)
 		players[MY_ID].update_pos(PSPEED)
-		
-		for ai in players_AI:
-			players[ai].update_pos(PSPEED)
 		#prepare own paddle status for sending + ball.heldBy shit
 		plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
 		# print "stat " + str(MY_ID)
 		send_shiz("STAT", MY_ID)
+		
+		# if this client handles AI, it handles its own 
+		for ai in players_AI:
+			players[ai].update_pos(PSPEED)
+			plyr_s = [str(players[ai].uid), str(players[ai].x), str(players[ai].y), str(players[ai].score), players[ai].color, players[ai].direction, players[ai].username]
+			send_shiz("STAT", ai)
 
 	#######################################################
 

@@ -152,9 +152,9 @@ class Player(Sprite):
 			return True
 		elif self.uid == 1 and ball.y > terr_HEIGHT/2: # bottom
 			return True
-		elif self.uid == 2 and ball.x < terr_WIDTH/3: # left
+		elif self.uid == 2 and ball.x < terr_WIDTH/4: # left
 			return True
-		elif self.uid == 3 and ball.x > 2*terr_WIDTH/3: # right
+		elif self.uid == 3 and ball.x > 3*terr_WIDTH/4: # right
 			return True
 		else:
 			return False

@@ -45,8 +45,8 @@ for p in players:
 PSPEED = 2	#paddle speed
 
 ### INDICES OF PLAYERS ON AI ###
-players_AI = [0, 1, 2, 3]
-print "DAMI " + str(len(players))
+players_AI = []
+# print "DAMI " + str(len(players))
 for ai in players_AI:
 	players[ai].on_AI()
 
@@ -55,13 +55,13 @@ for ai in players_AI:
 ballWIDTH, ballHEIGHT = 16, 16
 ball = e.Ball( 'RED', [250, 250])
 ball.set_direction('NE')
-ball.set_heldBy(random.choice(players_AI)) #default, player 0 holds ball
+ball.set_heldBy(0) #default, player 0 holds ball
 
 BSPEED = 2	#ball speed
 
 ########## border coordinates and border lengths ##########
 borderdiv_h = 6
-borderdiv_v = 14
+borderdiv_v = 20
 
 borders = {
 	'topleft_h': [(arenaLEFT, arenaTOP),(arenaLEFT + arenaWIDTH/borderdiv_h, arenaTOP)],

@@ -23,6 +23,10 @@ client_addresses = []
 
 #contains available indices for client_address
 available_IDs = [i for i in range(NUM_PLAYERS)]
+players_AI = []
+
+# DONE = True
+
 
 ### function to receive messages from client and send appropriate responses/broadcast ###
 def recvMsg():
@@ -45,25 +49,46 @@ def recvMsg():
 			else:
 				serverSocket.sendto(header + str(-1), clientAddress)
 		elif header == "DONE":
+			# if len(client_addresses) == NUM_PLAYERS:
+				# global notDONE
+				# notDONE = False
 			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
 		elif header == "STAT":
-			# print msg
-			print client_addresses
 			for c in client_addresses:
-				print c
 				serverSocket.sendto( msg, c )
 		elif header == "POUT": #player quits
 			
 			print msg
-			ID = int(msg[4])
+			ID_quitter = int(msg[4])
 
 			#player quits upon wait
 			if len(client_addresses) < NUM_PLAYERS:
-				available_IDs.append( ID )
-				client_addresses.remove(clientAddress)
+				available_IDs.append( ID_quitter )
 				serverSocket.sendto(header + "KBYE", clientAddress)
+				client_addresses.remove(clientAddress)
 			#already in game
-			# else:
+			else:
+				print str(players_AI)
+				players_AI.append( ID_quitter )
+				print str(players_AI)
+				serverSocket.sendto(header + "KBYE", clientAddress)
+				# client_addresses.remove(clientAddress)
+				
+				if len(players_AI) != NUM_PLAYERS:
+					
+					#handle the AI handled by quitter (if there's any)
+					quittersIDs = msg[4:]
+
+					ID_handle = None #ID of player that would handle AI
+					for i in range(NUM_PLAYERS):
+						if i not in players_AI:
+							ID_handle = i
+
+					print quittersIDs
+					print "player to handle AI: " + str(ID_handle)
+					serverSocket.sendto("DOAI" + str(ID_handle) + quittersIDs, client_addresses[ID_handle])
+					print "DOAI sent"
+
 
 try:
 	recvMsgThread = threading.Thread(target=recvMsg, args=())

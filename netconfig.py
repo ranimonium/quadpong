@@ -14,7 +14,7 @@ BUFFER_SIZE=2048
 ball_s = [] # ball_s = [ str(ball.heldBy), str(ball.x), str(ball.y), ball.color, ball.direction]
 plyr_s = [] # plyr_s = [str(players[MY_ID].uid), str(players[MY_ID].x), str(players[MY_ID].y), str(players[MY_ID].score), players[MY_ID].color, players[MY_ID].direction, players[MY_ID].username]
 
-def send_shiz(clientMessage, args=None):
+def send_shiz(clientMessage, MY_ID=None):
 	
 	if clientMessage == "JOIN":
 		clientSocket.sendto(clientMessage, (serverName, serverPort))
@@ -22,10 +22,11 @@ def send_shiz(clientMessage, args=None):
 		clientSocket.sendto(clientMessage, (serverName, serverPort))
 	elif clientMessage == "STAT":
 		shizSendMsg = clientMessage + str(MY_ID) + '$SHIZ$'.join( [ '$BALL$'.join(ball_s), '$PLYR$'.join(plyr_s) ] ) + "~ENDDATA~"
+		print shizSendMsg
 		clientSocket.sendto(shizSendMsg, (serverName, serverPort))
 	elif clientMessage == "POUT":
 		print "SEND: " + str(MY_ID)
-		clientSocket.sendto(clientMessage + str(args), (serverName, serverPort))
+		clientSocket.sendto(clientMessage + str(MY_ID), (serverName, serverPort))
 		# myConnection.sendMessage( clientMessage + str(MY_ID) + shizSendMsg + "~ENDDATA~")
 
 def recv_shiz():
@@ -52,10 +53,14 @@ def recv_shiz():
 
 			global players
 
+			print "RECV STAT1"
 			msg = msg.split("~ENDDATA~")
+			print "RECV STAT2 " + msg
 
 			try:
+				print "RECV STAT3"
 				for m in msg:
+					print "RECV STAT4 " + m
 					# m has ball status and player status in it
 					# print m
 					ID = int(m[4])
