@@ -2,7 +2,9 @@ QUADPONG
 ========
 
 CS145MP.
-
+Codera, Ginette
+Davalos, Jadurani
+Pacumio Lara
 
 #### Specifications ####
 * See attached pdf
