@@ -9,7 +9,7 @@
 NUM_PLAYERS = 4
 BUFFER_SIZE = 2048
 
-import socket
+import socket, time
 from socket import *
 import sys
 import threading
@@ -27,6 +27,13 @@ players_AI = []
 
 # DONE = True
 
+def timer():
+	seconds = 90
+	while seconds >= 0:
+		for c in client_addresses:
+			serverSocket.sendto("TIME" + str(seconds), c)
+		time.sleep(1)
+		seconds -= 1
 
 ### function to receive messages from client and send appropriate responses/broadcast ###
 def recvMsg():
@@ -49,8 +56,9 @@ def recvMsg():
 			else:
 				serverSocket.sendto(header + str(-1), clientAddress)
 		elif header == "DONE":
-			# if len(client_addresses) == NUM_PLAYERS:
-				# global notDONE
+			if len(client_addresses) == NUM_PLAYERS:
+				t = threading.Thread(target=timer, args=())
+				t.start()
 				# notDONE = False
 			serverSocket.sendto( header + str(len(client_addresses)), clientAddress )
 		elif header == "STAT":
