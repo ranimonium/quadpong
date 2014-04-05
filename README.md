@@ -27,15 +27,25 @@ Codera. Davalos. Pacumio.
  * Minimum requirements and dependencies
 
 
-### Files ###
+### Files and Directories ###
+* assets/
+ * contains the sounds, images, and fonts used in the game
+* strawman/
+ * contains all the dummy files, demonstrates our learning experiences
+* CS 145 Problem Set 2-3.pdf
+ * contains the specs of the project
 * elements.py
  * contains the game elements
-* server.py
- * accepts clients (running pong.py)
- * serves as the channel for clients' exchange of information
+* gameconfig.py
+ * contains the game configuration for the pong game
 * pong.py
  * the client program
  * this is what the users should run
+* pygameconfig.py
+ * contains the pygame shiz of the game
+* server.py
+ * accepts clients (running pong.py)
+ * serves as the channel for clients' exchange of information
 
 ### DEPENDENCIES ###
 * The machines to run the programs here must have:  
