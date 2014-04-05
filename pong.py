@@ -305,6 +305,10 @@ def game():
 		# print ball_s
 		send_shiz("STAT", ID)
 
+		for ai in players_AI:
+			players[ai].update_pos(PSPEED)
+			plyr_s = [str(players[ai].uid), str(players[ai].x), str(players[ai].y), str(players[ai].score), players[ai].color, players[ai].direction, players[ai].username]
+			send_shiz("STAT", ai)
 
 	#######################################################
 
@@ -479,8 +483,8 @@ def game():
 	def handle_borderPaddleCollisions(border_rects, paddle_rects):
 		for p in paddle_rects:
 			pDir = players[paddle_rects.index(p)].get_directionValue()
-			p.x += pDir[0]
-			p.y += pDir[1]
+			p.x += pDir[0]*PSPEED
+			p.y += pDir[1]*PSPEED
 
 		for b in border_rects:
 			paddle_i = b.collidelist(paddle_rects)
@@ -510,9 +514,6 @@ def game():
 		# if this client handles AI, it handles its own 
 		for ai in players_AI:
 			players[ai].update_pos(PSPEED)
-			plyr_s = [str(players[ai].uid), str(players[ai].x), str(players[ai].y), str(players[ai].score), players[ai].color, players[ai].direction, players[ai].username]
-			send_shiz("STAT", ai)
-
 
 	#################### SCORING SYSTEM ####################
 
